@@ -1,10 +1,10 @@
-import pandas as pd
 from pathlib import Path
-
 from typing import Dict, Optional
-import h5py
 
+import h5py
+import pandas as pd
 from policyengine_core.microsimulation import Microsimulation
+
 
 class SingleYearDataset:
     def __init__(
@@ -48,7 +48,7 @@ class SingleYearDataset:
                 "time_period",
                 "person",
                 "household",
-            ] # all datasets will have at least person and household entities
+            ]  # all datasets will have at least person and household entities
             for dataset in required_datasets:
                 if dataset not in f:
                     raise ValueError(
@@ -84,16 +84,20 @@ class SingleYearDataset:
 
     @staticmethod
     def from_simulation(
-        simulation: "Microsimulation", fiscal_year: int = 2025, entity_names_to_include: Optional[list] = None
+        simulation: "Microsimulation",
+        fiscal_year: int = 2025,
+        entity_names_to_include: Optional[list] = None,
     ) -> "SingleYearDataset":
         entity_dfs = {}
 
         # If no entity names specified, use all available entities
         if entity_names_to_include is None:
-            entity_names = list(set(
-                simulation.tax_benefit_system.variables[var].entity.key
-                for var in simulation.input_variables
-            ))
+            entity_names = list(
+                set(
+                    simulation.tax_benefit_system.variables[var].entity.key
+                    for var in simulation.input_variables
+                )
+            )
         else:
             entity_names = entity_names_to_include
 

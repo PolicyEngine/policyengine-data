@@ -1,9 +1,9 @@
-import pandas as pd
-import numpy as np
 from pathlib import Path
-
 from typing import Dict, List, Optional
+
 import h5py
+import numpy as np
+import pandas as pd
 
 from src.policyengine_data.single_year_dataset import SingleYearDataset
 
@@ -28,19 +28,19 @@ class MultiYearDataset:
             self.validate_file_path(file_path)
             with pd.HDFStore(file_path) as f:
                 self.datasets = {}
-                
+
                 # First, discover all years and entities in the file
                 years_entities = {}  # {year: {entity_name: df}}
-                
+
                 for key in f.keys():
-                    parts = key.strip('/').split('/')
-                    if len(parts) == 2 and parts[0] != 'time_period':
+                    parts = key.strip("/").split("/")
+                    if len(parts) == 2 and parts[0] != "time_period":
                         entity_name, year_str = parts
                         year = int(year_str)
                         if year not in years_entities:
                             years_entities[year] = {}
                         years_entities[year][entity_name] = f[key]
-                
+
                 # Create SingleYearDataset for each year
                 for year, entities in years_entities.items():
                     self.datasets[year] = SingleYearDataset(
@@ -49,7 +49,9 @@ class MultiYearDataset:
                     )
 
         self.data_format = "time_period_arrays"
-        self.time_period = list(sorted(self.datasets.keys()))[0] if self.datasets else None
+        self.time_period = (
+            list(sorted(self.datasets.keys()))[0] if self.datasets else None
+        )
 
     def get_year(self, fiscal_year: int) -> "SingleYearDataset":
         if fiscal_year in self.datasets:
@@ -100,7 +102,11 @@ class MultiYearDataset:
             required_entities = ["person", "household"]
             for entity in required_entities:
                 # Look for /entity/year pattern
-                if not any(key.startswith(f"/{entity}/") or key.startswith(f"{entity}/") for key in f.keys()):
+                if not any(
+                    key.startswith(f"/{entity}/")
+                    or key.startswith(f"{entity}/")
+                    for key in f.keys()
+                ):
                     raise ValueError(
                         f"No hierarchical data for '{entity}' found in file: {file_path}"
                     )
@@ -109,8 +115,8 @@ class MultiYearDataset:
         data = {}
         for year, dataset in self.datasets.items():
             for entity_name, entity_df in dataset.entities.items():
-                    for col in entity_df.columns:
-                        if col not in data:
-                            data[col] = {}
-                        data[col][year] = entity_df[col].values
+                for col in entity_df.columns:
+                    if col not in data:
+                        data[col] = {}
+                    data[col][year] = entity_df[col].values
         return data
