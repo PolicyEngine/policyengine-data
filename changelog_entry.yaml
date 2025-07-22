@@ -1,0 +1,6 @@
+- bump: minor
+  changes:
+    changed:
+    - Initialized changelogging.
+    - Added CI workflows and tests.
+    - Set up basic package structure and coverage.
