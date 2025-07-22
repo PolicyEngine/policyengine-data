@@ -3,7 +3,7 @@ from typing import Dict, Optional
 
 import h5py
 import pandas as pd
-from policyengine_core.microsimulation import Microsimulation
+from policyengine_core.simulations import Microsimulation
 
 
 class SingleYearDataset:
