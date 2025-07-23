@@ -1,3 +1,7 @@
+"""
+Class for handling multi-year datasets in PolicyEngine.
+"""
+
 from pathlib import Path
 from typing import Dict, List, Optional
 

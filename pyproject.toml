@@ -11,7 +11,7 @@ dependencies = [
     "h5py",
     "numpy",
     "pandas",
-    "huggingface_hub",
+    "huggingface_hub>=0.25.1",
     "tables",
     "policyengine-core>=3.6.4",
     "microdf-python",
