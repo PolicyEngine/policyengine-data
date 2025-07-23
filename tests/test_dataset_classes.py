@@ -4,7 +4,7 @@ Test cases for SingleYearDataset and MultiYearDataset classes.
 
 
 def test_single_year_dataset() -> None:
-    from src.policyengine_data.single_year_dataset import SingleYearDataset
+    from policyengine_data.single_year_dataset import SingleYearDataset
     import pandas as pd
 
     # Create a sample dataset
@@ -50,8 +50,8 @@ def test_single_year_dataset() -> None:
 
 
 def test_multi_year_dataset() -> None:
-    from src.policyengine_data.multi_year_dataset import MultiYearDataset
-    from src.policyengine_data.single_year_dataset import SingleYearDataset
+    from policyengine_data.multi_year_dataset import MultiYearDataset
+    from policyengine_data.single_year_dataset import SingleYearDataset
     import pandas as pd
 
     # Create SingleYearDataset instances for multiple years

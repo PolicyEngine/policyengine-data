@@ -46,6 +46,9 @@ docs = [
     "pyyaml",
     "furo>=2022.12.7",
     "h5py>=3.1.0,<4.0.0",
+    "policyengine-core",
+    "policyengine-us",
+    "policyengine-us-data",
 ]
 
 [tool.setuptools]
