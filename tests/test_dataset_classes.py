@@ -45,7 +45,7 @@ def test_single_year_dataset() -> None:
         )
     assert loaded_dataset.time_period == str(fiscal_year)
 
-    variables = dataset.variables()
+    variables = dataset.variables
     assert variables.keys() == {"person", "household"}
 
 
@@ -106,6 +106,6 @@ def test_multi_year_dataset() -> None:
                 original_year_data.entities[entity_name],
             )
 
-    variables_by_year = multi_dataset.variables()
+    variables_by_year = multi_dataset.variables
     assert variables_by_year.keys() == {2023, 2024}
     assert ["person", "household"] == list(variables_by_year[2023].keys())

@@ -2,6 +2,7 @@
 Class for handling multi-year datasets in PolicyEngine.
 """
 
+import shutil
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -128,33 +129,39 @@ class MultiYearDataset:
         return data
 
     def remove(self) -> None:
-        if hasattr(self, "file_path") and self.file_path is not None:
-            file_path = (
-                Path(self.file_path)
-                if isinstance(self.file_path, str)
-                else self.file_path
-            )
-            if file_path.exists():
-                file_path.unlink()
-                print(f"Removed dataset file: {file_path}")
-            else:
-                print(f"Dataset file does not exist: {file_path}")
-        else:
-            raise FileNotFoundError(
-                "Cannot remove dataset: no file path associated with this dataset. "
-                "This dataset may have been created in-memory."
-            )
+        """Removes the dataset from disk."""
+        if self.exists():
+            self.file_path.unlink()
 
+    def store_file(self, file_path: str):
+        """Moves a file to the dataset's file path.
+
+        Args:
+            file_path (str): The file path to move.
+        """
+
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"File {file_path} does not exist.")
+        shutil.move(file_path, self.file_path)
+
+    @property
     def variables(self) -> Dict[int, Dict[str, List[str]]]:
         """
         Returns a dictionary mapping years to entity variables dictionaries.
-
-        Returns:
-            Dict[int, Dict[str, List[str]]]: Dictionary where keys are years and values are dictionaries mapping entity names to lists of variables.
         """
         variables_by_year = {}
 
         for year, dataset in self.datasets.items():
-            variables_by_year[year] = dataset.variables()
+            variables_by_year[year] = dataset.variables
 
         return variables_by_year
+
+    @property
+    def exists(self) -> bool:
+        """Checks whether the dataset exists.
+
+        Returns:
+            bool: Whether the dataset exists.
+        """
+        return self.file_path.exists()

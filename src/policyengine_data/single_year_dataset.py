@@ -2,6 +2,7 @@
 Class for handling single-year datasets in PolicyEngine.
 """
 
+import shutil
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -83,22 +84,21 @@ class SingleYearDataset:
         )
 
     def remove(self) -> None:
-        if hasattr(self, "file_path") and self.file_path is not None:
-            file_path = (
-                Path(self.file_path)
-                if isinstance(self.file_path, str)
-                else self.file_path
-            )
-            if file_path.exists():
-                file_path.unlink()
-                print(f"Removed dataset file: {file_path}")
-            else:
-                print(f"Dataset file does not exist: {file_path}")
-        else:
-            raise FileNotFoundError(
-                "Cannot remove dataset: no file path associated with this dataset. "
-                "This dataset may have been created in-memory."
-            )
+        """Removes the dataset from disk."""
+        if self.exists():
+            self.file_path.unlink()
+
+    def store_file(self, file_path: str):
+        """Moves a file to the dataset's file path.
+
+        Args:
+            file_path (str): The file path to move.
+        """
+
+        file_path = Path(file_path)
+        if not file_path.exists():
+            raise FileNotFoundError(f"File {file_path} does not exist.")
+        shutil.move(file_path, self.file_path)
 
     def validate(self) -> None:
         # Check for NaNs in the tables
@@ -106,20 +106,6 @@ class SingleYearDataset:
             for col in df.columns:
                 if df[col].isna().any():
                     raise ValueError(f"Column '{col}' contains NaN values.")
-
-    def variables(self) -> Dict[str, List[str]]:
-        """
-        Returns a dictionary mapping entity names to lists of variables (column names).
-
-        Returns:
-            Dict[str, List[str]]: Dictionary where keys are entity names and values are lists of variable names for that entity.
-        """
-        variables_by_entity = {}
-
-        for entity_name, entity_df in self.entities.items():
-            variables_by_entity[entity_name] = entity_df.columns.tolist()
-
-        return variables_by_entity
 
     @staticmethod
     def from_simulation(
@@ -155,3 +141,24 @@ class SingleYearDataset:
             entities=entity_dfs,
             fiscal_year=fiscal_year,
         )
+
+    @property
+    def variables(self) -> Dict[str, List[str]]:
+        """
+        Returns a dictionary mapping entity names to lists of variables (column names).
+        """
+        variables_by_entity = {}
+
+        for entity_name, entity_df in self.entities.items():
+            variables_by_entity[entity_name] = entity_df.columns.tolist()
+
+        return variables_by_entity
+
+    @property
+    def exists(self) -> bool:
+        """Checks whether the dataset exists.
+
+        Returns:
+            bool: Whether the dataset exists.
+        """
+        return self.file_path.exists()
