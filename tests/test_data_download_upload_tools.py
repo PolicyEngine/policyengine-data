@@ -1,5 +1,5 @@
 """
-Test data download and upload functionality.
+Test data download and upload tools' functionality.
 """
 
 from pathlib import Path

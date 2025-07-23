@@ -13,6 +13,8 @@ from src.policyengine_data.single_year_dataset import SingleYearDataset
 
 
 class MultiYearDataset:
+    datasets: Dict[int, SingleYearDataset]
+
     def __init__(
         self,
         file_path: Optional[str] = None,
@@ -124,3 +126,17 @@ class MultiYearDataset:
                         data[col] = {}
                     data[col][year] = entity_df[col].values
         return data
+
+    def variables(self) -> Dict[int, Dict[str, List[str]]]:
+        """
+        Returns a dictionary mapping years to entity variables dictionaries.
+
+        Returns:
+            Dict[int, Dict[str, List[str]]]: Dictionary where keys are years and values are dictionaries mapping entity names to lists of variables.
+        """
+        variables_by_year = {}
+
+        for year, dataset in self.datasets.items():
+            variables_by_year[year] = dataset.variables()
+
+        return variables_by_year

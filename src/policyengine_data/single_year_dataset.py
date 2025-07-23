@@ -3,7 +3,7 @@ Class for handling single-year datasets in PolicyEngine.
 """
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import h5py
 import pandas as pd
@@ -11,6 +11,9 @@ from policyengine_core.simulations import Microsimulation
 
 
 class SingleYearDataset:
+    entities: Dict[str, pd.DataFrame]
+    time_period: str
+
     def __init__(
         self,
         file_path: Optional[str] = None,
@@ -86,11 +89,25 @@ class SingleYearDataset:
                 if df[col].isna().any():
                     raise ValueError(f"Column '{col}' contains NaN values.")
 
+    def variables(self) -> Dict[str, List[str]]:
+        """
+        Returns a dictionary mapping entity names to lists of variables (column names).
+
+        Returns:
+            Dict[str, List[str]]: Dictionary where keys are entity names and values are lists of variable names for that entity.
+        """
+        variables_by_entity = {}
+
+        for entity_name, entity_df in self.entities.items():
+            variables_by_entity[entity_name] = entity_df.columns.tolist()
+
+        return variables_by_entity
+
     @staticmethod
     def from_simulation(
         simulation: "Microsimulation",
         fiscal_year: int = 2025,
-        entity_names_to_include: Optional[list] = None,
+        entity_names_to_include: Optional[List[str]] = None,
     ) -> "SingleYearDataset":
         entity_dfs = {}
 
