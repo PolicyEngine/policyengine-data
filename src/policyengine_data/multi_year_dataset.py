@@ -127,6 +127,24 @@ class MultiYearDataset:
                     data[col][year] = entity_df[col].values
         return data
 
+    def remove(self) -> None:
+        if hasattr(self, "file_path") and self.file_path is not None:
+            file_path = (
+                Path(self.file_path)
+                if isinstance(self.file_path, str)
+                else self.file_path
+            )
+            if file_path.exists():
+                file_path.unlink()
+                print(f"Removed dataset file: {file_path}")
+            else:
+                print(f"Dataset file does not exist: {file_path}")
+        else:
+            raise FileNotFoundError(
+                "Cannot remove dataset: no file path associated with this dataset. "
+                "This dataset may have been created in-memory."
+            )
+
     def variables(self) -> Dict[int, Dict[str, List[str]]]:
         """
         Returns a dictionary mapping years to entity variables dictionaries.

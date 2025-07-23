@@ -82,6 +82,24 @@ class SingleYearDataset:
             fiscal_year=self.time_period,
         )
 
+    def remove(self) -> None:
+        if hasattr(self, "file_path") and self.file_path is not None:
+            file_path = (
+                Path(self.file_path)
+                if isinstance(self.file_path, str)
+                else self.file_path
+            )
+            if file_path.exists():
+                file_path.unlink()
+                print(f"Removed dataset file: {file_path}")
+            else:
+                print(f"Dataset file does not exist: {file_path}")
+        else:
+            raise FileNotFoundError(
+                "Cannot remove dataset: no file path associated with this dataset. "
+                "This dataset may have been created in-memory."
+            )
+
     def validate(self) -> None:
         # Check for NaNs in the tables
         for df in self.tables:

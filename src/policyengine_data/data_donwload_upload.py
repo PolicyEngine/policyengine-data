@@ -145,25 +145,25 @@ def _download_from_huggingface(
     )
 
 
-def upload(file_path: Path, url: str) -> None:
+def upload(local_dir: Path, url: str) -> None:
     """Uploads the dataset to a URL.
 
     Args:
-        file_path (Path): The path to the file to upload.
+        local_dir (Path): The path to the directory containing the file to upload.
         url (str): The url to upload.
     """
     if url.startswith("hf://"):
         owner_name, model_name, file_name = url.split("/")[2:]
-        _upload_to_huggingface(file_path, owner_name, model_name, file_name)
+        _upload_to_huggingface(local_dir, owner_name, model_name, file_name)
 
 
 def _upload_to_huggingface(
-    file_path: Path, owner_name: str, model_name: str, file_name: str
+    local_dir: Path, owner_name: str, model_name: str, file_name: str
 ) -> None:
     """Uploads the dataset to HuggingFace.
 
     Args:
-        file_path (Path): The path to the file to upload.
+        local_dir (Path): The path to the directory containing the file to upload.
         owner_name (str): The owner name.
         model_name (str): The model name.
     """
@@ -177,7 +177,7 @@ def _upload_to_huggingface(
     api = HfApi()
 
     api.upload_file(
-        path_or_fileobj=file_path,
+        path_or_fileobj=local_dir,
         path_in_repo=file_name,
         repo_id=f"{owner_name}/{model_name}",
         repo_type="model",
