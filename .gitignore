@@ -209,3 +209,5 @@ __marimo__/
 # Data files
 *.csv
 *.h5
+
+.DS_Store
