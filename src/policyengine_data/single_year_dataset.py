@@ -13,20 +13,20 @@ from policyengine_core.simulations import Microsimulation
 
 class SingleYearDataset:
     entities: Dict[str, pd.DataFrame]
-    time_period: str
+    time_period: int  # manually convert to str when -core expects str
 
     def __init__(
         self,
         file_path: Optional[str] = None,
         entities: Optional[Dict[str, pd.DataFrame]] = None,
-        fiscal_year: Optional[int] = 2025,
+        time_period: Optional[int] = 2025,
     ) -> None:
         self.entities: Dict[str, pd.DataFrame] = {}
 
         if file_path is not None:
             self.validate_file_path(file_path)
             with pd.HDFStore(file_path) as f:
-                self.time_period = str(f["time_period"].iloc[0])
+                self.time_period = int(f["time_period"].iloc[0])
                 # Load all entities from the file (except time_period)
                 for key in f.keys():
                     if key != "/time_period":
@@ -38,9 +38,9 @@ class SingleYearDataset:
                     "Must provide either a file path or a dictionary of entities' dataframes."
                 )
             self.entities = entities.copy()
-            self.time_period = str(fiscal_year)
+            self.time_period = time_period
 
-        self.data_format = "arrays"
+        self.data_format = "arrays"  # remove once -core does not expect different data formats
         self.tables = tuple(self.entities.values())
         self.table_names = tuple(self.entities.keys())
 
@@ -80,7 +80,7 @@ class SingleYearDataset:
     def copy(self) -> "SingleYearDataset":
         return SingleYearDataset(
             entities={name: df.copy() for name, df in self.entities.items()},
-            fiscal_year=self.time_period,
+            time_period=self.time_period,
         )
 
     def remove(self) -> None:
@@ -110,7 +110,7 @@ class SingleYearDataset:
     @staticmethod
     def from_simulation(
         simulation: "Microsimulation",
-        fiscal_year: int = 2025,
+        time_period: int = 2025,
         entity_names_to_include: Optional[List[str]] = None,
     ) -> "SingleYearDataset":
         entity_dfs = {}
@@ -134,12 +134,12 @@ class SingleYearDataset:
                 == entity
             ]
             entity_dfs[entity] = simulation.calculate_dataframe(
-                input_variables, period=fiscal_year
+                input_variables, period=time_period
             )
 
         return SingleYearDataset(
             entities=entity_dfs,
-            fiscal_year=fiscal_year,
+            time_period=time_period,
         )
 
     @property

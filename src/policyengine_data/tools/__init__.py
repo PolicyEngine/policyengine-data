@@ -1,2 +1,2 @@
-from .huggin_face import download_huggingface_dataset, get_or_prompt_hf_token
+from .hugging_face import download_huggingface_dataset, get_or_prompt_hf_token
 from .win_file_manager import WindowsAtomicFileManager

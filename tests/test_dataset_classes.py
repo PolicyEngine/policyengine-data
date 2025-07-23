@@ -12,10 +12,10 @@ def test_single_year_dataset() -> None:
         "person": pd.DataFrame({"id": [1, 2], "name": ["Alice", "Bob"]}),
         "household": pd.DataFrame({"id": [1], "income": [50000]}),
     }
-    fiscal_year = 2023
+    time_period = 2023
 
     # Initialize SingleYearDataset
-    dataset = SingleYearDataset(entities=entities, fiscal_year=fiscal_year)
+    dataset = SingleYearDataset(entities=entities, time_period=time_period)
     dataset.validate()
 
     # Check if entities are correctly set
@@ -28,7 +28,7 @@ def test_single_year_dataset() -> None:
     pd.testing.assert_frame_equal(
         dataset.entities["household"], entities["household"]
     )
-    assert dataset.time_period == str(fiscal_year)
+    assert dataset.time_period == time_period
 
     # Save the dataset to a file
     file_path = "test_single_year_dataset.h5"
@@ -43,7 +43,7 @@ def test_single_year_dataset() -> None:
         pd.testing.assert_frame_equal(
             loaded_dataset.entities[entity_name], entities[entity_name]
         )
-    assert loaded_dataset.time_period == str(fiscal_year)
+    assert loaded_dataset.time_period == time_period
 
     variables = dataset.variables
     assert variables.keys() == {"person", "household"}
@@ -64,8 +64,8 @@ def test_multi_year_dataset() -> None:
         "household": pd.DataFrame({"id": [1], "income": [55000]}),
     }
 
-    dataset_2023 = SingleYearDataset(entities=entities_2023, fiscal_year=2023)
-    dataset_2024 = SingleYearDataset(entities=entities_2024, fiscal_year=2024)
+    dataset_2023 = SingleYearDataset(entities=entities_2023, time_period=2023)
+    dataset_2024 = SingleYearDataset(entities=entities_2024, time_period=2024)
 
     # Initialize MultiYearDataset with list of SingleYearDataset instances
     multi_dataset = MultiYearDataset(datasets=[dataset_2023, dataset_2024])

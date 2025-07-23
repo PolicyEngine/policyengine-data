@@ -28,7 +28,7 @@ class MultiYearDataset:
                     raise TypeError(
                         "All items in datasets must be of type SingleYearDataset."
                     )
-                year = int(dataset.time_period[:4])
+                year = dataset.time_period
                 self.datasets[year] = dataset
 
         if file_path is not None:
@@ -52,22 +52,22 @@ class MultiYearDataset:
                 for year, entities in years_entities.items():
                     self.datasets[year] = SingleYearDataset(
                         entities=entities,
-                        fiscal_year=year,
+                        time_period=year,
                     )
 
-        self.data_format = "time_period_arrays"
+        self.data_format = "time_period_arrays"  # remove once -core does not expect different data formats
         self.time_period = (
             list(sorted(self.datasets.keys()))[0] if self.datasets else None
         )
 
-    def get_year(self, fiscal_year: int) -> "SingleYearDataset":
-        if fiscal_year in self.datasets:
-            return self.datasets[fiscal_year]
+    def get_year(self, time_period: int) -> "SingleYearDataset":
+        if time_period in self.datasets:
+            return self.datasets[time_period]
         else:
-            raise ValueError(f"No dataset found for year {fiscal_year}.")
+            raise ValueError(f"No dataset found for year {time_period}.")
 
-    def __getitem__(self, fiscal_year: int) -> "SingleYearDataset":
-        return self.get_year(fiscal_year)
+    def __getitem__(self, time_period: int) -> "SingleYearDataset":
+        return self.get_year(time_period)
 
     def save(self, file_path: str) -> None:
         Path(file_path).unlink(
