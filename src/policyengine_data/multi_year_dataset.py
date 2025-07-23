@@ -101,14 +101,14 @@ class MultiYearDataset:
         with h5py.File(file_path, "r") as f:
             required_entities = ["person", "household"]
             for entity in required_entities:
-                # Look for /entity/year pattern
-                if not any(
-                    key.startswith(f"/{entity}/")
-                    or key.startswith(f"{entity}/")
-                    for key in f.keys()
-                ):
+                if entity not in f:
                     raise ValueError(
-                        f"No hierarchical data for '{entity}' found in file: {file_path}"
+                        f"No data for '{entity}' found in file: {file_path}"
+                    )
+                entity_group = f[entity]
+                if not any(key.isdigit() for key in entity_group.keys()):
+                    raise ValueError(
+                        f"No year data for '{entity}' found in file: {file_path}"
                     )
 
     def load(self) -> Dict[str, Dict[int, np.ndarray]]:
