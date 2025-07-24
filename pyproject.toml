@@ -13,7 +13,8 @@ dependencies = [
     "pandas",
     "huggingface_hub",
     "policyengine-core>=3.6.4",
-    "microdf-python==0.4.4",
+    "microdf-python",
+    "sqlalchemy",
 ]
 
 [project.optional-dependencies]
