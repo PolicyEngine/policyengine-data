@@ -1,6 +1,0 @@
-- bump: minor
-  changes:
-    changed:
-    - Added Single and Multi Year Dataset classes.
-    - Added data download and upload functionality.
-    - Make .sh files executable.
