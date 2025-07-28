@@ -1,0 +1,905 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="&lt;no title&gt;" href="intro.html" />
+        <link rel="prefetch" href="_static/logo.png" as="image" />
+
+    <!-- Generated with Sphinx 7.4.7 and Furo 2025.07.19 -->
+        <title>PolicyEngine Dataset classes documentation - Policyengine-data documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=25af2a20" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=13237357" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css?v=4fa983c6" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="_static/style.css?v=91be6f8b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #2b2b2b;
+  --color-code-foreground: #f8f8f2;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="intro.html"><div class="brand">Policyengine-data documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="intro.html">
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">Policyengine-data documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">PolicyEngine Dataset classes documentation</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/dataset.ipynb" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="policyengine-dataset-classes-documentation">
+<h1>PolicyEngine Dataset classes documentation<a class="headerlink" href="#policyengine-dataset-classes-documentation" title="Link to this heading">¶</a></h1>
+<p>This notebook provides documentation for the <code class="docutils literal notranslate"><span class="pre">SingleYearDataset</span></code> and <code class="docutils literal notranslate"><span class="pre">MultiYearDataset</span></code> classes in PolicyEngine Data. These classes are designed to handle structured data for policy analysis and microsimulation.</p>
+<p>More information on how to integrate with PolicyEngine Core and country-specific data packages will be added as this develops.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">NaturalNameWarning</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">policyengine_data.single_year_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">SingleYearDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">policyengine_data.multi_year_dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiYearDataset</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="singleyeardataset">
+<h2>SingleYearDataset<a class="headerlink" href="#singleyeardataset" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">SingleYearDataset</span></code> class is designed to handle data for a single year, organizing it by entities (typically “person” and “household” in addition to others). Each entity contains a pandas DataFrame with variables relevant to that entity.</p>
+<section id="key-features">
+<h3>Key features:<a class="headerlink" href="#key-features" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Stores data for a single time period</p></li>
+<li><p>Organizes data by entities (person, household, etc.)</p></li>
+<li><p>All data in a given entity is combined into a single table</p></li>
+<li><p>Forces data shape validation in the dataset creation process given the table format</p></li>
+<li><p>Supports basic functionality from the legacy <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> like loading and saving but deprecates multiple data format and loading to the cloud complexity</p></li>
+</ul>
+</section>
+<section id="creating-a-singleyeardataset">
+<h3>Creating a SingleYearDataset<a class="headerlink" href="#creating-a-singleyeardataset" title="Link to this heading">¶</a></h3>
+<p>There are three main ways to create a <code class="docutils literal notranslate"><span class="pre">SingleYearDataset</span></code>:</p>
+<ol class="arabic simple">
+<li><p><strong>From entity DataFrames</strong>: Create directly from a dictionary of entity DataFrames</p></li>
+<li><p><strong>From HDF5 file</strong>: Load from an existing HDF5 file</p></li>
+<li><p><strong>From simulation</strong>: Create from a PolicyEngine Core microsimulation</p></li>
+</ol>
+<section id="method-1-from-entity-dataframes">
+<h4>Method 1: From entity DataFrames<a class="headerlink" href="#method-1-from-entity-dataframes" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create sample data for demonstration</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">42</span><span class="p">)</span>
+
+<span class="c1"># Person-level data</span>
+<span class="n">person_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s1">&#39;person_id&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000</span><span class="p">),</span>
+    <span class="s1">&#39;age&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+    <span class="s1">&#39;income&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">50000</span><span class="p">,</span> <span class="mi">15000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
+    <span class="s1">&#39;household_id&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">400</span><span class="p">),</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>  <span class="c1"># Varying household sizes</span>
+<span class="p">})</span>
+
+<span class="c1"># Household-level data</span>
+<span class="n">household_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+    <span class="s1">&#39;household_id&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">400</span><span class="p">),</span>
+    <span class="s1">&#39;household_size&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span>
+    <span class="s1">&#39;housing_cost&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">1200</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span>
+    <span class="s1">&#39;state&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="s1">&#39;CA&#39;</span><span class="p">,</span> <span class="s1">&#39;TX&#39;</span><span class="p">,</span> <span class="s1">&#39;NY&#39;</span><span class="p">,</span> <span class="s1">&#39;FL&#39;</span><span class="p">],</span> <span class="mi">400</span><span class="p">)</span>
+<span class="p">})</span>
+
+<span class="c1"># Create entities dictionary</span>
+<span class="n">entities</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;person&#39;</span><span class="p">:</span> <span class="n">person_data</span><span class="p">,</span>
+    <span class="s1">&#39;household&#39;</span><span class="p">:</span> <span class="n">household_data</span>
+<span class="p">}</span>
+
+<span class="c1"># Create SingleYearDataset</span>
+<span class="n">dataset_2023</span> <span class="o">=</span> <span class="n">SingleYearDataset</span><span class="p">(</span>
+    <span class="n">entities</span><span class="o">=</span><span class="n">entities</span><span class="p">,</span>
+    <span class="n">time_period</span><span class="o">=</span><span class="mi">2023</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset created for year: </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">time_period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available entities: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">entities</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Person data shape: </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Household data shape: </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;household&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Dataset created for year: 2023
+Available entities: [&#39;person&#39;, &#39;household&#39;]
+Person data shape: (1000, 4)
+Household data shape: (400, 4)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="method-2-loading-from-hdf5-file">
+<h4>Method 2: Loading from HDF5 file<a class="headerlink" href="#method-2-loading-from-hdf5-file" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the dataset to an HDF5 file</span>
+<span class="n">file_path</span> <span class="o">=</span> <span class="s2">&quot;sample_dataset_2023.h5&quot;</span>
+<span class="n">dataset_2023</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset saved to </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load the dataset from the HDF5 file</span>
+<span class="n">loaded_dataset</span> <span class="o">=</span> <span class="n">SingleYearDataset</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">file_path</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset loaded from file for year: </span><span class="si">{</span><span class="n">loaded_dataset</span><span class="o">.</span><span class="n">time_period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded entities: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">loaded_dataset</span><span class="o">.</span><span class="n">entities</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Verify the data is the same</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Original person data shape: </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded person data shape: </span><span class="si">{</span><span class="n">loaded_dataset</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data integrity check: </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">loaded_dataset</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Dataset saved to sample_dataset_2023.h5
+Dataset loaded from file for year: 2023
+Loaded entities: [&#39;household&#39;, &#39;person&#39;]
+Original person data shape: (1000, 4)
+Loaded person data shape: (1000, 4)
+Data integrity check: True
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="method-3-from-a-policyengine-microsimulation">
+<h4>Method 3: From a PolicyEngine MicroSimulation<a class="headerlink" href="#method-3-from-a-policyengine-microsimulation" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">policyengine_us</span><span class="w"> </span><span class="kn">import</span> <span class="n">Microsimulation</span>
+
+<span class="n">start_year</span> <span class="o">=</span> <span class="mi">2023</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="s2">&quot;hf://policyengine/policyengine-us-data/cps_2023.h5&quot;</span>
+
+<span class="n">sim</span> <span class="o">=</span> <span class="n">Microsimulation</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
+
+<span class="n">single_year_dataset</span> <span class="o">=</span> <span class="n">SingleYearDataset</span><span class="o">.</span><span class="n">from_simulation</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">time_period</span><span class="o">=</span><span class="n">start_year</span><span class="p">)</span>
+<span class="n">single_year_dataset</span><span class="o">.</span><span class="n">time_period</span> <span class="o">=</span> <span class="n">start_year</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset created from PolicyEngine US microdata stored in </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset created for time period: </span><span class="si">{</span><span class="n">single_year_dataset</span><span class="o">.</span><span class="n">time_period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"version_major": 2, "version_minor": 0, "model_id": "eb9d6bc00f1e49e09c4c0d5914ddebc2"}</script><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Dataset created from PolicyEngine US microdata stored in hf://policyengine/policyengine-us-data/cps_2023.h5
+Dataset created for time period: 2023
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="main-functionalities-of-singleyeardataset">
+<h3>Main functionalities of SingleYearDataset<a class="headerlink" href="#main-functionalities-of-singleyeardataset" title="Link to this heading">¶</a></h3>
+<section id="data-access-and-properties">
+<h4>1. Data access and properties<a class="headerlink" href="#data-access-and-properties" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Access entity data</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Person entity columns:&quot;</span><span class="p">,</span> <span class="n">dataset_2023</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Household entity columns:&quot;</span><span class="p">,</span> <span class="n">dataset_2023</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;household&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+
+<span class="c1"># Get variables by entity</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Variables by entity:&quot;</span><span class="p">)</span>
+<span class="n">variables</span> <span class="o">=</span> <span class="n">dataset_2023</span><span class="o">.</span><span class="n">variables</span>
+<span class="k">for</span> <span class="n">entity</span><span class="p">,</span> <span class="n">vars_list</span> <span class="ow">in</span> <span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">entity</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">vars_list</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access basic properties</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Time period: </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">time_period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data format: </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">data_format</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Table names: </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">table_names</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of tables: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">tables</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Person entity columns: [&#39;person_id&#39;, &#39;age&#39;, &#39;income&#39;, &#39;household_id&#39;]
+Household entity columns: [&#39;household_id&#39;, &#39;household_size&#39;, &#39;housing_cost&#39;, &#39;state&#39;]
+
+Variables by entity:
+person: [&#39;person_id&#39;, &#39;age&#39;, &#39;income&#39;, &#39;household_id&#39;]
+household: [&#39;household_id&#39;, &#39;household_size&#39;, &#39;housing_cost&#39;, &#39;state&#39;]
+
+Time period: 2023
+Data format: arrays
+Table names: (&#39;person&#39;, &#39;household&#39;)
+Number of tables: 2
+</pre></div>
+</div>
+</div>
+</div>
+<p>Note that the data format property will be removed once we fully move away from legacy code that used the old <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> classes as only entity tables as DataFrames will be supported</p>
+</section>
+<section id="data-loading-and-copying">
+<h4>2. Data loading and copying<a class="headerlink" href="#data-loading-and-copying" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load data as a flat dictionary (useful for PolicyEngine Core)</span>
+<span class="n">loaded_data</span> <span class="o">=</span> <span class="n">dataset_2023</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loaded data keys (first 10):&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">loaded_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())[:</span><span class="mi">10</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sample variable &#39;age&#39; shape:&quot;</span><span class="p">,</span> <span class="n">loaded_data</span><span class="p">[</span><span class="s1">&#39;age&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+<span class="c1"># Create a copy of the dataset</span>
+<span class="n">dataset_copy</span> <span class="o">=</span> <span class="n">dataset_2023</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Original dataset time period: </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">time_period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Copied dataset time period: </span><span class="si">{</span><span class="n">dataset_copy</span><span class="o">.</span><span class="n">time_period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Are they the same object? </span><span class="si">{</span><span class="n">dataset_2023</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="n">dataset_copy</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Do they have the same data? </span><span class="si">{</span><span class="n">dataset_2023</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">dataset_copy</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loaded data keys (first 10): [&#39;person_id&#39;, &#39;age&#39;, &#39;income&#39;, &#39;household_id&#39;, &#39;household_size&#39;, &#39;housing_cost&#39;, &#39;state&#39;]
+Sample variable &#39;age&#39; shape: (1000,)
+
+Original dataset time period: 2023
+Copied dataset time period: 2023
+Are they the same object? False
+Do they have the same data? True
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="data-validation">
+<h4>3. Data validation<a class="headerlink" href="#data-validation" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Validate the dataset (checks for NaN values)</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">dataset_2023</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dataset validation passed - no NaN values found&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create a dataset with NaN values to demonstrate validation</span>
+<span class="n">invalid_person_data</span> <span class="o">=</span> <span class="n">person_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="n">invalid_person_data</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;income&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+<span class="n">invalid_entities</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;person&#39;</span><span class="p">:</span> <span class="n">invalid_person_data</span><span class="p">,</span>
+    <span class="s1">&#39;household&#39;</span><span class="p">:</span> <span class="n">household_data</span>
+<span class="p">}</span>
+
+<span class="n">invalid_dataset</span> <span class="o">=</span> <span class="n">SingleYearDataset</span><span class="p">(</span>
+    <span class="n">entities</span><span class="o">=</span><span class="n">invalid_entities</span><span class="p">,</span>
+    <span class="n">time_period</span><span class="o">=</span><span class="mi">2023</span>
+<span class="p">)</span>
+
+<span class="c1"># Try to validate the invalid dataset</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">invalid_dataset</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Invalid dataset validation passed&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation correctly failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Dataset validation passed - no NaN values found
+Validation correctly failed: Column &#39;income&#39; contains NaN values.
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="multiyeardataset">
+<h2>MultiYearDataset<a class="headerlink" href="#multiyeardataset" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">MultiYearDataset</span></code> class is designed to handle data across multiple years, containing a collection of <code class="docutils literal notranslate"><span class="pre">SingleYearDataset</span></code> instances. This is useful for storing all the data necessary for multi-year analysis in a single object, rather than having to load and manage multiple <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> objects one per year.</p>
+<section id="id1">
+<h3>Key features:<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Stores multiple <code class="docutils literal notranslate"><span class="pre">SingleYearDataset</span></code> instances indexed by year</p></li>
+<li><p>Maintains consistency across years for entity structures</p></li>
+<li><p>Supports copying and data extraction across all years</p></li>
+</ul>
+</section>
+<section id="creating-a-multiyeardataset">
+<h3>Creating a MultiYearDataset<a class="headerlink" href="#creating-a-multiyeardataset" title="Link to this heading">¶</a></h3>
+<p>There are two main ways to create a <code class="docutils literal notranslate"><span class="pre">MultiYearDataset</span></code>:</p>
+<ol class="arabic simple">
+<li><p><strong>From a list of SingleYearDatasets</strong>: Create from existing SingleYearDataset instances</p></li>
+<li><p><strong>From HDF5 file</strong>: Load from an existing multi-year HDF5 file</p></li>
+</ol>
+<section id="method-1-from-singleyeardataset-list">
+<h4>Method 1: From SingleYearDataset list<a class="headerlink" href="#method-1-from-singleyeardataset-list" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create datasets for multiple years</span>
+<span class="n">datasets_by_year</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">2021</span><span class="p">,</span> <span class="mi">2022</span><span class="p">,</span> <span class="mi">2023</span><span class="p">,</span> <span class="mi">2024</span><span class="p">]:</span>
+    <span class="c1"># Create slightly different data for each year (e.g., income growth)</span>
+    <span class="n">year_person_data</span> <span class="o">=</span> <span class="n">person_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">year_person_data</span><span class="p">[</span><span class="s1">&#39;income&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">year_person_data</span><span class="p">[</span><span class="s1">&#39;income&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.03</span> <span class="o">**</span> <span class="p">(</span><span class="n">year</span> <span class="o">-</span> <span class="mi">2023</span><span class="p">))</span>  <span class="c1"># 3% annual growth</span>
+    
+    <span class="n">year_household_data</span> <span class="o">=</span> <span class="n">household_data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">year_household_data</span><span class="p">[</span><span class="s1">&#39;housing_cost&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">year_household_data</span><span class="p">[</span><span class="s1">&#39;housing_cost&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.05</span> <span class="o">**</span> <span class="p">(</span><span class="n">year</span> <span class="o">-</span> <span class="mi">2023</span><span class="p">))</span>  <span class="c1"># 5% annual growth</span>
+    
+    <span class="n">year_entities</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;person&#39;</span><span class="p">:</span> <span class="n">year_person_data</span><span class="p">,</span>
+        <span class="s1">&#39;household&#39;</span><span class="p">:</span> <span class="n">year_household_data</span>
+    <span class="p">}</span>
+    
+    <span class="n">year_dataset</span> <span class="o">=</span> <span class="n">SingleYearDataset</span><span class="p">(</span>
+        <span class="n">entities</span><span class="o">=</span><span class="n">year_entities</span><span class="p">,</span>
+        <span class="n">time_period</span><span class="o">=</span><span class="n">year</span>
+    <span class="p">)</span>
+    <span class="n">datasets_by_year</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">year_dataset</span><span class="p">)</span>
+
+<span class="c1"># Create MultiYearDataset</span>
+<span class="n">multi_year_dataset</span> <span class="o">=</span> <span class="n">MultiYearDataset</span><span class="p">(</span><span class="n">datasets</span><span class="o">=</span><span class="n">datasets_by_year</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multi-year dataset created with years: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Earliest time period present: </span><span class="si">{</span><span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">time_period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data format: </span><span class="si">{</span><span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">data_format</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Multi-year dataset created with years: [2021, 2022, 2023, 2024]
+Earliest time period present: 2021
+Data format: time_period_arrays
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="method-2-save-and-load-from-hdf5-file">
+<h4>Method 2: Save and load from HDF5 File<a class="headerlink" href="#method-2-save-and-load-from-hdf5-file" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">NaturalNameWarning</span><span class="p">)</span>
+
+<span class="c1"># Save the multi-year dataset to an HDF5 file</span>
+<span class="n">multi_year_file_path</span> <span class="o">=</span> <span class="s2">&quot;sample_multi_year_dataset.h5&quot;</span>
+<span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">multi_year_file_path</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multi-year dataset saved to </span><span class="si">{</span><span class="n">multi_year_file_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Load the multi-year dataset from the HDF5 file</span>
+<span class="n">loaded_multi_year</span> <span class="o">=</span> <span class="n">MultiYearDataset</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">multi_year_file_path</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multi-year dataset loaded with years: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">loaded_multi_year</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Verify the data integrity</span>
+<span class="n">original_2022_income</span> <span class="o">=</span> <span class="n">multi_year_dataset</span><span class="p">[</span><span class="mi">2022</span><span class="p">]</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">][</span><span class="s1">&#39;income&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">loaded_2022_income</span> <span class="o">=</span> <span class="n">loaded_multi_year</span><span class="p">[</span><span class="mi">2022</span><span class="p">]</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">][</span><span class="s1">&#39;income&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Original 2022 average income: $</span><span class="si">{</span><span class="n">original_2022_income</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loaded 2022 average income: $</span><span class="si">{</span><span class="n">loaded_2022_income</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data integrity check: </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">original_2022_income</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">loaded_2022_income</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.01</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Multi-year dataset saved to sample_multi_year_dataset.h5
+Multi-year dataset loaded with years: [2021, 2022, 2023, 2024]
+Original 2022 average income: $49201.98
+Loaded 2022 average income: $49201.98
+Data integrity check: True
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="main-functionalities-of-multiyeardataset">
+<h3>Main functionalities of MultiYearDataset<a class="headerlink" href="#main-functionalities-of-multiyeardataset" title="Link to this heading">¶</a></h3>
+<section id="accessing-data-by-year">
+<h4>1. Accessing data by year<a class="headerlink" href="#accessing-data-by-year" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Access specific years using get_year() method</span>
+<span class="n">dataset_2022</span> <span class="o">=</span> <span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">get_year</span><span class="p">(</span><span class="mi">2022</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;2022 dataset time period: </span><span class="si">{</span><span class="n">dataset_2022</span><span class="o">.</span><span class="n">time_period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;2022 person data shape: </span><span class="si">{</span><span class="n">dataset_2022</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Access specific years using indexing operator []</span>
+<span class="n">dataset_2024</span> <span class="o">=</span> <span class="n">multi_year_dataset</span><span class="p">[</span><span class="mi">2024</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;2024 dataset time period: </span><span class="si">{</span><span class="n">dataset_2024</span><span class="o">.</span><span class="n">time_period</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Try to access a year that doesn&#39;t exist</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">dataset_2025</span> <span class="o">=</span> <span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">get_year</span><span class="p">(</span><span class="mi">2025</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error accessing non-existent year: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># List all available years</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Available years: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>2022 dataset time period: 2022
+2022 person data shape: (1000, 4)
+2024 dataset time period: 2024
+Error accessing non-existent year: No dataset found for year 2025.
+Available years: [2021, 2022, 2023, 2024]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="variables-and-data-structure">
+<h4>2. Variables and data structure<a class="headerlink" href="#variables-and-data-structure" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get variables across all years</span>
+<span class="n">variables_by_year</span> <span class="o">=</span> <span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">variables</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Variables by year and entity:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">year</span><span class="p">,</span> <span class="n">entities</span> <span class="ow">in</span> <span class="n">variables_by_year</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Year </span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">entity</span><span class="p">,</span> <span class="n">vars_list</span> <span class="ow">in</span> <span class="n">entities</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">vars_list</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Variables by year and entity:
+
+Year 2021:
+  person: [&#39;person_id&#39;, &#39;age&#39;, &#39;income&#39;, &#39;household_id&#39;]
+  household: [&#39;household_id&#39;, &#39;household_size&#39;, &#39;housing_cost&#39;, &#39;state&#39;]
+
+Year 2022:
+  person: [&#39;person_id&#39;, &#39;age&#39;, &#39;income&#39;, &#39;household_id&#39;]
+  household: [&#39;household_id&#39;, &#39;household_size&#39;, &#39;housing_cost&#39;, &#39;state&#39;]
+
+Year 2023:
+  person: [&#39;person_id&#39;, &#39;age&#39;, &#39;income&#39;, &#39;household_id&#39;]
+  household: [&#39;household_id&#39;, &#39;household_size&#39;, &#39;housing_cost&#39;, &#39;state&#39;]
+
+Year 2024:
+  person: [&#39;person_id&#39;, &#39;age&#39;, &#39;income&#39;, &#39;household_id&#39;]
+  household: [&#39;household_id&#39;, &#39;household_size&#39;, &#39;housing_cost&#39;, &#39;state&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="id2">
+<h4>3. Data loading and copying<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load all data as a time-period indexed dictionary</span>
+<span class="n">all_data</span> <span class="o">=</span> <span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sample of loaded data structure:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">year_data</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_data</span><span class="o">.</span><span class="n">items</span><span class="p">())[:</span><span class="mi">2</span><span class="p">]:</span>  <span class="c1"># Show first 2 variables</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Variable &#39;</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&#39;:&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">year</span><span class="p">,</span> <span class="n">data_array</span> <span class="ow">in</span> <span class="n">year_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Year </span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">: shape </span><span class="si">{</span><span class="n">data_array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, mean = </span><span class="si">{</span><span class="n">data_array</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create a copy of the multi-year dataset</span>
+<span class="n">multi_year_copy</span> <span class="o">=</span> <span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Original dataset years: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">multi_year_dataset</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Copied dataset years: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">multi_year_copy</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Are they the same object? </span><span class="si">{</span><span class="n">multi_year_dataset</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="n">multi_year_copy</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Verify independence of the copy</span>
+<span class="n">original_2023_income_mean</span> <span class="o">=</span> <span class="n">multi_year_dataset</span><span class="p">[</span><span class="mi">2023</span><span class="p">]</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">][</span><span class="s1">&#39;income&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="n">copy_2023_income_mean</span> <span class="o">=</span> <span class="n">multi_year_copy</span><span class="p">[</span><span class="mi">2023</span><span class="p">]</span><span class="o">.</span><span class="n">entities</span><span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">][</span><span class="s1">&#39;income&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Original 2023 income mean: $</span><span class="si">{</span><span class="n">original_2023_income_mean</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Copy 2023 income mean: $</span><span class="si">{</span><span class="n">copy_2023_income_mean</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Data integrity check: </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">original_2023_income_mean</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">copy_2023_income_mean</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.01</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Sample of loaded data structure:
+
+Variable &#39;person_id&#39;:
+  Year 2021: shape (1000,), mean = 499.50
+  Year 2022: shape (1000,), mean = 499.50
+  Year 2023: shape (1000,), mean = 499.50
+  Year 2024: shape (1000,), mean = 499.50
+
+Variable &#39;age&#39;:
+  Year 2021: shape (1000,), mean = 49.86
+  Year 2022: shape (1000,), mean = 49.86
+  Year 2023: shape (1000,), mean = 49.86
+  Year 2024: shape (1000,), mean = 49.86
+
+Original dataset years: [2021, 2022, 2023, 2024]
+Copied dataset years: [2021, 2022, 2023, 2024]
+Are they the same object? False
+Original 2023 income mean: $50678.04
+Copy 2023 income mean: $50678.04
+Data integrity check: True
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clean up temporary files</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="n">temp_files</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sample_dataset_2023.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;sample_multi_year_dataset.h5&quot;</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">temp_files</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cleaned up </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Documentation complete! The notebook now contains comprehensive documentation for both SingleYearDataset and MultiYearDataset classes.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Cleaned up sample_dataset_2023.h5
+Cleaned up sample_multi_year_dataset.h5
+Documentation complete! The notebook now contains comprehensive documentation for both SingleYearDataset and MultiYearDataset classes.
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          <a class="prev-page" href="intro.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Home</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">PolicyEngine Dataset classes documentation</a><ul>
+<li><a class="reference internal" href="#singleyeardataset">SingleYearDataset</a><ul>
+<li><a class="reference internal" href="#key-features">Key features:</a></li>
+<li><a class="reference internal" href="#creating-a-singleyeardataset">Creating a SingleYearDataset</a><ul>
+<li><a class="reference internal" href="#method-1-from-entity-dataframes">Method 1: From entity DataFrames</a></li>
+<li><a class="reference internal" href="#method-2-loading-from-hdf5-file">Method 2: Loading from HDF5 file</a></li>
+<li><a class="reference internal" href="#method-3-from-a-policyengine-microsimulation">Method 3: From a PolicyEngine MicroSimulation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#main-functionalities-of-singleyeardataset">Main functionalities of SingleYearDataset</a><ul>
+<li><a class="reference internal" href="#data-access-and-properties">1. Data access and properties</a></li>
+<li><a class="reference internal" href="#data-loading-and-copying">2. Data loading and copying</a></li>
+<li><a class="reference internal" href="#data-validation">3. Data validation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#multiyeardataset">MultiYearDataset</a><ul>
+<li><a class="reference internal" href="#id1">Key features:</a></li>
+<li><a class="reference internal" href="#creating-a-multiyeardataset">Creating a MultiYearDataset</a><ul>
+<li><a class="reference internal" href="#method-1-from-singleyeardataset-list">Method 1: From SingleYearDataset list</a></li>
+<li><a class="reference internal" href="#method-2-save-and-load-from-hdf5-file">Method 2: Save and load from HDF5 File</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#main-functionalities-of-multiyeardataset">Main functionalities of MultiYearDataset</a><ul>
+<li><a class="reference internal" href="#accessing-data-by-year">1. Accessing data by year</a></li>
+<li><a class="reference internal" href="#variables-and-data-structure">2. Variables and data structure</a></li>
+<li><a class="reference internal" href="#id2">3. Data loading and copying</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
+    <script src="_static/scripts/sphinx-book-theme.js"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js?v=4a39c7ea"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script async="async" src="_static/sphinx-thebe.js?v=c100c467"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"; const thebe_selector = ".thebe,.cell"; const thebe_selector_input = "pre"; const thebe_selector_output = ".output, .cell_output"</script>
+    <script type="application/vnd.jupyter.widget-state+json">{"state": {"814e17c945284d3c85743e4764727d31": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "426184fadf734981acc2a85a05104e73": {"model_name": "ProgressStyleModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "ProgressStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "bar_color": null, "description_width": ""}}, "1e06f06e4b5b405ea7d6bf4473b19c2c": {"model_name": "FloatProgressModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "FloatProgressModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "ProgressView", "bar_style": "success", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_814e17c945284d3c85743e4764727d31", "max": 106167940.0, "min": 0.0, "orientation": "horizontal", "style": "IPY_MODEL_426184fadf734981acc2a85a05104e73", "tabbable": null, "tooltip": null, "value": 106167940.0}}, "48f64f04905b45fda52180baf153d2a2": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "408df720ba0c4ac5a01e5ed79ba5a128": {"model_name": "HTMLStyleModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "1b1c9c77fe5e4451b851c6a78a9429b2": {"model_name": "HTMLModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_48f64f04905b45fda52180baf153d2a2", "placeholder": "\u200b", "style": "IPY_MODEL_408df720ba0c4ac5a01e5ed79ba5a128", "tabbable": null, "tooltip": null, "value": "cps_2023.h5:\u2007100%"}}, "b9cf79e5e2eb45769617cb3204aad8a4": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "fe4222706237414190dc8f4b1f11f766": {"model_name": "HTMLStyleModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "state": {"_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLStyleModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "StyleView", "background": null, "description_width": "", "font_size": null, "text_color": null}}, "6a72b2bbbced4a45bb87dd9465883f62": {"model_name": "HTMLModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HTMLModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HTMLView", "description": "", "description_allow_html": false, "layout": "IPY_MODEL_b9cf79e5e2eb45769617cb3204aad8a4", "placeholder": "\u200b", "style": "IPY_MODEL_fe4222706237414190dc8f4b1f11f766", "tabbable": null, "tooltip": null, "value": "\u2007106M/106M\u2007[00:00&lt;00:00,\u2007322MB/s]"}}, "c8b288df47844a24881a01fafcb7104b": {"model_name": "LayoutModel", "model_module": "@jupyter-widgets/base", "model_module_version": "2.0.0", "state": {"_model_module": "@jupyter-widgets/base", "_model_module_version": "2.0.0", "_model_name": "LayoutModel", "_view_count": null, "_view_module": "@jupyter-widgets/base", "_view_module_version": "2.0.0", "_view_name": "LayoutView", "align_content": null, "align_items": null, "align_self": null, "border_bottom": null, "border_left": null, "border_right": null, "border_top": null, "bottom": null, "display": null, "flex": null, "flex_flow": null, "grid_area": null, "grid_auto_columns": null, "grid_auto_flow": null, "grid_auto_rows": null, "grid_column": null, "grid_gap": null, "grid_row": null, "grid_template_areas": null, "grid_template_columns": null, "grid_template_rows": null, "height": null, "justify_content": null, "justify_items": null, "left": null, "margin": null, "max_height": null, "max_width": null, "min_height": null, "min_width": null, "object_fit": null, "object_position": null, "order": null, "overflow": null, "padding": null, "right": null, "top": null, "visibility": null, "width": null}}, "eb9d6bc00f1e49e09c4c0d5914ddebc2": {"model_name": "HBoxModel", "model_module": "@jupyter-widgets/controls", "model_module_version": "2.0.0", "state": {"_dom_classes": [], "_model_module": "@jupyter-widgets/controls", "_model_module_version": "2.0.0", "_model_name": "HBoxModel", "_view_count": null, "_view_module": "@jupyter-widgets/controls", "_view_module_version": "2.0.0", "_view_name": "HBoxView", "box_style": "", "children": ["IPY_MODEL_1b1c9c77fe5e4451b851c6a78a9429b2", "IPY_MODEL_1e06f06e4b5b405ea7d6bf4473b19c2c", "IPY_MODEL_6a72b2bbbced4a45bb87dd9465883f62"], "layout": "IPY_MODEL_c8b288df47844a24881a01fafcb7104b", "tabbable": null, "tooltip": null}}}, "version_major": 2, "version_minor": 0}</script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script crossorigin="anonymous" data-jupyter-widgets-cdn="https://cdn.jsdelivr.net/npm/" src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@1.0.6/dist/embed-amd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    </body>
+</html>
