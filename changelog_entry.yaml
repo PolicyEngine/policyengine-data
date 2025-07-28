@@ -1,6 +1,5 @@
 - bump: minor
   changes:
     changed:
-    - Initialized changelogging.
-    - Added CI workflows and tests.
-    - Set up basic package structure and coverage.
+    - Added Single and Multi Year Dataset classes.
+    - Added data download and upload functionality.
