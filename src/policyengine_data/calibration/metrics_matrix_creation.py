@@ -148,9 +148,19 @@ def apply_single_constraint(
         "less_than": lambda v, cv: v < cv,
         "less_than_or_equal": lambda v, cv: v <= cv,
         "not_equals": lambda v, cv: v != cv,
-        "in": lambda v, cv: np.isin(v, cv),
-        "not_in": lambda v, cv: ~np.isin(v, cv),
     }
+
+    # "in" operation - check if constraint value is contained in string values
+    if operation == "in":
+        if isinstance(constraint_value, list):
+            # Check if any of the constraint values are contained in the string representation
+            mask = np.zeros(len(values), dtype=bool)
+            for cv in constraint_value:
+                mask |= np.array([str(cv) in str(v) for v in values])
+            return mask
+        else:
+            # Single value - check if it's contained in each value's string representation
+            return np.array([str(constraint_value) in str(v) for v in values])
 
     if operation not in operations:
         raise ValueError(f"Unknown operation: {operation}")
@@ -250,7 +260,6 @@ def parse_constraint_for_name(constraint: pd.Series) -> str:
         "less_than_or_equal": "<=",
         "not_equals": "!=",
         "in": "in",
-        "not_in": "not_in",
     }
 
     # Get the symbol or use the operation name if not found
@@ -260,8 +269,6 @@ def parse_constraint_for_name(constraint: pd.Series) -> str:
     if op == "in":
         # Replace commas with underscores for "in" operations
         return f"{var}_in_{val.replace(',', '_')}"
-    elif op == "not_in":
-        return f"{var}_not_in_{val.replace(',', '_')}"
     else:
         # Use the symbol format for all other operations
         return f"{var}{symbol}{val}"
