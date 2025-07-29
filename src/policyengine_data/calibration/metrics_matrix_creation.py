@@ -396,7 +396,7 @@ def create_metrics_matrix(
     engine = create_engine(db_uri)
 
     # Initialize simulation
-    sim = initialize_simulation(sim, dataset, time_period)
+    sim = initialize_simulation(time_period, sim, dataset)
 
     # Get the system object for variable entity mapping
     system = sim.tax_benefit_system
