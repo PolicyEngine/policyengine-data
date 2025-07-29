@@ -8,24 +8,24 @@ def test_rescale_calibration_targets_from_db() -> None:
 
     # Local SQLite database Ben created
     local_file = "sqlite:///src/policyengine_data/calibration/policy_data.db"
-    # Placeholder for actual database URI once it is published from when merged into us-data
+    # Placeholder for actual database URI once it is uploaded to Google Cloud
     db_uri = None
 
-    if db_uri is not None:
-        results = rescale_calibration_targets(db_uri=local_file)
+    results = rescale_calibration_targets(db_uri=local_file)
 
-        assert results.columns.tolist() == [
-            "target_id",
-            "stratum_id",
-            "stratum_group_id",
-            "parent_stratum_id",
-            "variable",
-            "period",
-            "reform_id",
-            "value",
-            "scaled_value",
-            "scaling_factor",
-        ], "Missing columns for rescaled targets and scaling factors"
-        assert results.value.equals(
-            results.scaled_value
-        ), "Values and scaled values should match for age targets as state and national values matched"
+    assert results.columns.tolist() == [
+        "target_id",
+        "stratum_id",
+        "stratum_group_id",
+        "parent_stratum_id",
+        "variable",
+        "period",
+        "reform_id",
+        "value",
+        "scaled_value",
+        "scaling_factor",
+        "tolerance",
+    ], "Missing columns for rescaled targets and scaling factors"
+    assert results.value.equals(
+        results.scaled_value
+    ), "Values and scaled values should match for age targets as state and national values matched"
