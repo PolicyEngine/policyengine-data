@@ -7,12 +7,12 @@ def test_rescale_calibration_targets_from_db() -> None:
     from policyengine_data.calibration import rescale_calibration_targets
 
     # Local SQLite database Ben created
-    local_file = "sqlite:////Users/movil1/Desktop/PYTHONJOBS/PolicyEngine/policy_data.db"
+    local_file = "sqlite:///src/policyengine_data/calibration/policy_data.db"
     # Placeholder for actual database URI once it is published from when merged into us-data
     db_uri = None
 
     if db_uri is not None:
-        results = rescale_calibration_targets(db_uri=db_uri)
+        results = rescale_calibration_targets(db_uri=local_file)
 
         assert results.columns.tolist() == [
             "target_id",

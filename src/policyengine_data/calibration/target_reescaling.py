@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 
 logger = logging.getLogger(__name__)
 
+
 """
 Database connection and structure functions
 """
@@ -20,7 +21,7 @@ def fetch_stratum_hierarchy(engine: create_engine) -> pd.DataFrame:
     """
     query = """
     SELECT stratum_id, stratum_group_id, parent_stratum_id, notes
-    FROM stratum
+    FROM strata
     ORDER BY parent_stratum_id NULLS FIRST, stratum_group_id, stratum_id
     """
     return pd.read_sql(query, engine)
@@ -50,10 +51,12 @@ def fetch_targets(
         t.reform_id,
         t.value,
         t.active,
+        t.tolerance,
         s.stratum_group_id,
-        s.parent_stratum_id
-    FROM target t
-    JOIN stratum s ON t.stratum_id = s.stratum_id
+        s.parent_stratum_id,
+        s.definition_hash
+    FROM targets t
+    JOIN strata s ON t.stratum_id = s.stratum_id
     WHERE t.variable = :variable
       AND t.period = :period
       AND t.reform_id = :reform_id
@@ -88,16 +91,44 @@ def fetch_all_targets(engine: create_engine) -> pd.DataFrame:
         t.reform_id,
         t.value,
         t.active,
+        t.tolerance,
         s.stratum_group_id,
-        s.parent_stratum_id
-    FROM target t
-    JOIN stratum s ON t.stratum_id = s.stratum_id
+        s.parent_stratum_id,
+        s.definition_hash
+    FROM targets t
+    JOIN strata s ON t.stratum_id = s.stratum_id
     WHERE t.active = true
     ORDER BY t.variable, t.period, t.reform_id, 
              s.parent_stratum_id NULLS FIRST, s.stratum_group_id, s.stratum_id
     """
 
     return pd.read_sql(query, engine)
+
+
+def fetch_stratum_constraints(engine, stratum_id: int) -> pd.DataFrame:
+    """
+    Fetch all constraints for a specific stratum.
+
+    Args:
+        engine: SQLAlchemy engine
+        stratum_id: The stratum ID to fetch constraints for
+
+    Returns:
+        DataFrame with constraint details
+    """
+    query = """
+    SELECT 
+        stratum_id,
+        constraint_variable,
+        operation,
+        value,
+        notes
+    FROM stratum_constraints
+    WHERE stratum_id = :stratum_id
+    ORDER BY constraint_variable, operation
+    """
+
+    return pd.read_sql(query, engine, params={"stratum_id": stratum_id})
 
 
 def get_unique_combinations(
@@ -226,6 +257,7 @@ def rescale_children_to_parent(
         scaled_group = apply_scaling_factor(
             group_children, scaling_factor, value_column
         )
+
         updated_dfs.append(scaled_group)
 
     # Combine results
@@ -332,7 +364,7 @@ def update_targets_in_db(engine, updates: List[Dict]) -> int:
         for update in updates:
             query = text(
                 """
-                UPDATE target
+                UPDATE targets
                 SET value = :reescaled_value
                 WHERE target_id = :target_id
             """
@@ -450,6 +482,7 @@ def rescale_calibration_targets(
             "value",
             "scaled_value",
             "scaling_factor",
+            "tolerance",
         ]
     ].copy()
 
@@ -471,8 +504,8 @@ def rescale_calibration_targets(
 
 
 if __name__ == "__main__":
-    # Local SQLite databse Ben created
-    db_uri = "sqlite:////Users/movil1/Desktop/PYTHONJOBS/PolicyEngine/policy_data.db"
+    # Local SQLite database Ben created
+    db_uri = "sqlite:///src/policyengine_data/calibration/policy_data.db"
 
     results = rescale_calibration_targets(db_uri=db_uri)
 
