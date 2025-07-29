@@ -206,7 +206,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-.DS_Store
+# Data files
+*.csv
+*.h5
 
-# Database files
-*.db
+.DS_Store
