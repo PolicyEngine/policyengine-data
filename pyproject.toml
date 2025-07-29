@@ -16,6 +16,7 @@ dependencies = [
     "policyengine-core>=3.6.4",
     "policyengine-us>=1.353.0",
     "microdf-python",
+    "sqlalchemy",
 ]
 
 [project.optional-dependencies]
