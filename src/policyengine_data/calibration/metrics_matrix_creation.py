@@ -245,29 +245,6 @@ def create_constraint_mask(
     return combined_mask
 
 
-def calculate_target_variable(
-    sim: Microsimulation,
-    variable: str,
-    stratum_mask: np.ndarray,
-) -> np.ndarray:
-    """
-    Calculate target variable values and apply stratum mask.
-
-    Args:
-        sim: Microsimulation instance
-        variable: Target variable name
-        stratum_mask: Boolean mask for the stratum
-
-    Returns:
-        Array of masked values at household level
-    """
-    # Calculate the variable at household level
-    values = calculate_variable_at_household_level(sim, variable)
-
-    # Apply stratum mask (zero out values outside the stratum)
-    return values * stratum_mask
-
-
 def parse_constraint_for_name(constraint: pd.Series) -> str:
     """
     Parse a single constraint into a human-readable format for naming.
@@ -355,12 +332,11 @@ def process_single_target(
     # Create stratum mask
     stratum_mask = create_constraint_mask(sim, constraints_df)
 
-    # Calculate target variable with mask applied
-    metric_values = calculate_target_variable(
-        sim,
-        target["variable"],
-        stratum_mask,
-    )
+    # Calculate the variable at household level
+    values = calculate_variable_at_household_level(sim, target["variable"])
+
+    # Apply stratum mask (zero out values outside the stratum)
+    metric_values = values * stratum_mask
 
     # Build target info dictionary
     target_info = {
@@ -562,3 +538,4 @@ if __name__ == "__main__":
     print("\nValidation Results Summary:")
     print(f"Total targets: {len(validation_results)}")
     print(f"Active targets: {validation_results['active'].sum()}")
+    print(validation_results)
