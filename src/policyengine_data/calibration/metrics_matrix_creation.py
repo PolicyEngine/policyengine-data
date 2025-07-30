@@ -9,6 +9,40 @@ from sqlalchemy import create_engine
 logger = logging.getLogger(__name__)
 
 
+def download_database(
+    filename: Optional[str] = "policy_data.db",
+    repo_id: Optional[str] = "policyengine/test",
+) -> create_engine:
+    """
+    Download the SQLite database from Hugging Face Hub and return the connection string.
+
+    Args:
+        filename: Optional name of the database file to download
+        repo_id: Optional Hugging Face repository ID where the database is stored
+
+    Returns:
+        Connection string for the SQLite database
+    """
+    import os
+
+    from huggingface_hub import hf_hub_download
+
+    # Download the file to the current working directory
+    try:
+        downloaded_path = hf_hub_download(
+            repo_id=repo_id,
+            filename=filename,
+            local_dir=".",  # Use "." for the current working directory
+            local_dir_use_symlinks=False,  # Recommended to avoid symlinks
+        )
+        path = os.path.abspath(downloaded_path)
+        logger.info(f"File downloaded successfully to: {path}")
+        return f"sqlite:///{path}"
+
+    except Exception as e:
+        raise ValueError(f"An error occurred: {e}")
+
+
 def fetch_targets_from_database(
     engine, time_period: int, reform_id: Optional[int] = 0
 ) -> pd.DataFrame:
@@ -75,7 +109,7 @@ def fetch_stratum_constraints(engine, stratum_id: int) -> pd.DataFrame:
 
 
 def calculate_variable_at_household_level(
-    sim: Microsimulation, variable: str, system
+    sim: Microsimulation, variable: str
 ) -> np.ndarray:
     """
     Calculate a variable and ensure it's at the household level.
@@ -83,16 +117,12 @@ def calculate_variable_at_household_level(
     Args:
         sim: Microsimulation instance
         variable: Variable name to calculate
-        system: System object containing variable definitions
 
     Returns:
         Array of values at household level
     """
-    # Calculate the variable
     values = sim.calculate(variable).values
-
-    # Get the entity level of the variable
-    values_entity = system.variables[variable].entity.key
+    values_entity = sim.tax_benefit_system.variables[variable].entity.key
 
     # Map to household level if needed
     if values_entity != "household":
@@ -169,7 +199,7 @@ def apply_single_constraint(
 
 
 def create_constraint_mask(
-    sim: Microsimulation, constraints_df: pd.DataFrame, system
+    sim: Microsimulation, constraints_df: pd.DataFrame
 ) -> np.ndarray:
     """
     Create a boolean mask for households that meet all stratum constraints.
@@ -177,7 +207,6 @@ def create_constraint_mask(
     Args:
         sim: Microsimulation instance
         constraints_df: DataFrame with constraint data
-        system: System object containing variable definitions
 
     Returns:
         Boolean array at household level
@@ -196,7 +225,8 @@ def create_constraint_mask(
     for _, constraint in constraints_df.iterrows():
         # Calculate the constraint variable at household level
         variable_values = calculate_variable_at_household_level(
-            sim, constraint["constraint_variable"], system
+            sim,
+            constraint["constraint_variable"],
         )
 
         # Parse the constraint value
@@ -216,7 +246,9 @@ def create_constraint_mask(
 
 
 def calculate_target_variable(
-    sim: Microsimulation, variable: str, stratum_mask: np.ndarray, system
+    sim: Microsimulation,
+    variable: str,
+    stratum_mask: np.ndarray,
 ) -> np.ndarray:
     """
     Calculate target variable values and apply stratum mask.
@@ -225,13 +257,12 @@ def calculate_target_variable(
         sim: Microsimulation instance
         variable: Target variable name
         stratum_mask: Boolean mask for the stratum
-        system: System object containing variable definitions
 
     Returns:
         Array of masked values at household level
     """
     # Calculate the variable at household level
-    values = calculate_variable_at_household_level(sim, variable, system)
+    values = calculate_variable_at_household_level(sim, variable)
 
     # Apply stratum mask (zero out values outside the stratum)
     return values * stratum_mask
@@ -309,7 +340,6 @@ def process_single_target(
     sim: Microsimulation,
     target: pd.Series,
     constraints_df: pd.DataFrame,
-    system,
 ) -> Tuple[np.ndarray, Dict[str, any]]:
     """
     Process a single target to calculate its metric values and info.
@@ -318,17 +348,18 @@ def process_single_target(
         sim: Microsimulation instance
         target: pandas Series with target data
         constraints_df: DataFrame with constraint data
-        system: System object containing variable definitions
 
     Returns:
         Tuple of (metric_values, target_info_dict)
     """
     # Create stratum mask
-    stratum_mask = create_constraint_mask(sim, constraints_df, system)
+    stratum_mask = create_constraint_mask(sim, constraints_df)
 
     # Calculate target variable with mask applied
     metric_values = calculate_target_variable(
-        sim, target["variable"], stratum_mask, system
+        sim,
+        target["variable"],
+        stratum_mask,
     )
 
     # Build target info dictionary
@@ -341,31 +372,6 @@ def process_single_target(
     }
 
     return metric_values, target_info
-
-
-def initialize_simulation(
-    time_period: int,
-    sim: Optional[Microsimulation] = None,
-    dataset: Optional[type] = None,
-) -> Microsimulation:
-    """
-    Initialize or validate the microsimulation instance.
-
-    Args:
-        time_period: Time period for the simulation
-        sim: Optional existing Microsimulation instance
-        dataset: Optional dataset type for creating new simulation
-
-    Returns:
-        Microsimulation instance
-    """
-    if sim is None:
-        if dataset is None:
-            raise ValueError("Either 'sim' or 'dataset' must be provided")
-        sim = Microsimulation(dataset=dataset)
-
-    sim.default_calculation_period = time_period
-    return sim
 
 
 def create_metrics_matrix(
@@ -403,10 +409,11 @@ def create_metrics_matrix(
     engine = create_engine(db_uri)
 
     # Initialize simulation
-    sim = initialize_simulation(time_period, sim, dataset)
-
-    # Get the system object for variable entity mapping
-    system = sim.tax_benefit_system
+    if sim is None:
+        if dataset is None:
+            raise ValueError("Either 'sim' or 'dataset' must be provided")
+        sim = Microsimulation(dataset=dataset)
+    sim.default_calculation_period = time_period
 
     # Get household IDs for matrix index
     household_ids = sim.calculate("household_id").values
@@ -436,7 +443,9 @@ def create_metrics_matrix(
 
             # Process the target
             metric_values, info_dict = process_single_target(
-                sim, target, constraints_df, system
+                sim,
+                target,
+                constraints_df,
             )
 
             # Store results
@@ -534,8 +543,8 @@ def validate_metrics_matrix(
 
 
 if __name__ == "__main__":
-    # Loading local database
-    db_uri = "sqlite:///src/policyengine_data/calibration/policy_data.db"
+    # Download the database from Hugging Face Hub
+    db_uri = download_database()
 
     # Create metrics matrix
     metrics_matrix, target_values, target_info = create_metrics_matrix(
