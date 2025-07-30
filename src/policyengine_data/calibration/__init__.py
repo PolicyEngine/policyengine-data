@@ -1,1 +1,1 @@
-from .target_reescaling import rescale_calibration_targets
+from .target_rescaling import download_database, rescale_calibration_targets

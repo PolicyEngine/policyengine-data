@@ -16,6 +16,7 @@ dependencies = [
     "policyengine-core>=3.6.4",
     "microdf-python",
     "sqlalchemy",
+    "huggingface_hub",
 ]
 
 [project.optional-dependencies]

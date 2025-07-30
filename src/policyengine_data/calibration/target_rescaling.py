@@ -12,19 +12,38 @@ Database connection and structure functions
 """
 
 
-def fetch_stratum_hierarchy(engine: create_engine) -> pd.DataFrame:
+def download_database(
+    filename: Optional[str] = "policy_data.db",
+    repo_id: Optional[str] = "policyengine/test",
+) -> create_engine:
     """
-    Fetch the complete stratum hierarchy from the database.
+    Download the SQLite database from Hugging Face Hub and return the connection string.
+
+    Args:
+        filename: optional name of the database file to download
+        repo_id: optional Hugging Face repository ID where the database is stored
 
     Returns:
-        DataFrame with stratum_id, stratum_group_id, parent_stratum_id, notes
+        Connection string for the SQLite database
     """
-    query = """
-    SELECT stratum_id, stratum_group_id, parent_stratum_id, notes
-    FROM strata
-    ORDER BY parent_stratum_id NULLS FIRST, stratum_group_id, stratum_id
-    """
-    return pd.read_sql(query, engine)
+    import os
+
+    from huggingface_hub import hf_hub_download
+
+    # Download the file to the current working directory
+    try:
+        downloaded_path = hf_hub_download(
+            repo_id=repo_id,
+            filename=filename,
+            local_dir=".",  # Use "." for the current working directory
+            local_dir_use_symlinks=False,  # Recommended to avoid symlinks
+        )
+        path = os.path.abspath(downloaded_path)
+        logger.info(f"File downloaded successfully to: {path}")
+        return f"sqlite:///{path}"
+
+    except Exception as e:
+        raise ValueError(f"An error occurred: {e}")
 
 
 def fetch_targets(
@@ -105,32 +124,6 @@ def fetch_all_targets(engine: create_engine) -> pd.DataFrame:
     return pd.read_sql(query, engine)
 
 
-def fetch_stratum_constraints(engine, stratum_id: int) -> pd.DataFrame:
-    """
-    Fetch all constraints for a specific stratum.
-
-    Args:
-        engine: SQLAlchemy engine
-        stratum_id: The stratum ID to fetch constraints for
-
-    Returns:
-        DataFrame with constraint details
-    """
-    query = """
-    SELECT 
-        stratum_id,
-        constraint_variable,
-        operation,
-        value,
-        notes
-    FROM stratum_constraints
-    WHERE stratum_id = :stratum_id
-    ORDER BY constraint_variable, operation
-    """
-
-    return pd.read_sql(query, engine, params={"stratum_id": stratum_id})
-
-
 def get_unique_combinations(
     targets_df: pd.DataFrame,
 ) -> List[Tuple[str, int, int]]:
@@ -166,18 +159,6 @@ def get_children_strata(
     return targets_df[targets_df["parent_stratum_id"] == parent_id]
 
 
-def get_stratum_groups(targets_df: pd.DataFrame) -> List[int]:
-    """Get all unique stratum group IDs."""
-    return targets_df["stratum_group_id"].unique().tolist()
-
-
-def get_strata_in_group(
-    targets_df: pd.DataFrame, group_id: int
-) -> pd.DataFrame:
-    """Get all strata belonging to a specific group."""
-    return targets_df[targets_df["stratum_group_id"] == group_id]
-
-
 """
 Calculation functions
 """
@@ -204,18 +185,6 @@ def calculate_scaling_factor(
     return parent_total / children_total
 
 
-def apply_scaling_factor(
-    df: pd.DataFrame,
-    scaling_factor: float,
-    value_column: Optional[str] = "value",
-) -> pd.DataFrame:
-    """Apply scaling factor to all values in the dataframe."""
-    df = df.copy()
-    df[f"scaled_{value_column}"] = df[value_column] * scaling_factor
-    df["scaling_factor"] = scaling_factor
-    return df
-
-
 """
 Rescaling functions
 """
@@ -224,20 +193,19 @@ Rescaling functions
 def rescale_children_to_parent(
     targets_df: pd.DataFrame,
     parent_id: int,
-    value_column: Optional[str] = "value",
 ) -> pd.DataFrame:
     """
     Rescale all children of a parent to match the parent's total.
 
     Returns updated dataframe with scaled values.
     """
-    # Get parent value
+    # Get parent scaled value
     parent_rows = targets_df[targets_df["stratum_id"] == parent_id]
     if parent_rows.empty:
         logger.warning(f"Parent stratum {parent_id} not found")
         return targets_df
 
-    parent_value = parent_rows.iloc[0][value_column]
+    parent_value = parent_rows.iloc[0]["scaled_value"]
 
     # Get all children
     children = get_children_strata(targets_df, parent_id)
@@ -245,32 +213,20 @@ def rescale_children_to_parent(
         return targets_df
 
     # Process each stratum group separately
-    updated_dfs = []
     for group_id in children["stratum_group_id"].unique():
         group_children = children[children["stratum_group_id"] == group_id]
 
-        # Calculate scaling factor
-        children_total = calculate_group_total(group_children, value_column)
+        # Calculate scaling factor based on current scaled values
+        children_total = calculate_group_total(group_children, "scaled_value")
         scaling_factor = calculate_scaling_factor(parent_value, children_total)
 
-        # Apply scaling
-        scaled_group = apply_scaling_factor(
-            group_children, scaling_factor, value_column
-        )
-
-        updated_dfs.append(scaled_group)
-
-    # Combine results
-    if updated_dfs:
-        scaled_children = pd.concat(updated_dfs, ignore_index=True)
-
-        # Update the original dataframe
-        for idx, row in scaled_children.iterrows():
-            mask = targets_df["target_id"] == row["target_id"]
-            targets_df.loc[mask, f"scaled_{value_column}"] = row[
-                f"scaled_{value_column}"
-            ]
-            targets_df.loc[mask, "scaling_factor"] = row["scaling_factor"]
+        # Update scaled values and scaling factors directly in the main dataframe
+        for _, child in group_children.iterrows():
+            mask = targets_df["target_id"] == child["target_id"]
+            targets_df.loc[mask, "scaled_value"] = (
+                child["scaled_value"] * scaling_factor
+            )
+            targets_df.loc[mask, "scaling_factor"] = scaling_factor
 
     return targets_df
 
@@ -327,14 +283,16 @@ def rescale_targets_hierarchically(targets_df: pd.DataFrame) -> pd.DataFrame:
     # Process each level (starting from level 1, as level 0 has no parents)
     for level in sorted(levels.keys())[1:]:
         for stratum_id in levels[level - 1]:  # Parents are in previous level
-            targets_df = rescale_children_to_parent(
-                targets_df, stratum_id, value_column="scaled_value"
-            )
+            targets_df = rescale_children_to_parent(targets_df, stratum_id)
 
     return targets_df
 
 
-# Update database functions
+"""
+Functions for preparing and updating database
+"""
+
+
 def prepare_update_data(targets_df: pd.DataFrame) -> List[Dict]:
     """Prepare data for database update."""
     updates = []
@@ -504,8 +462,8 @@ def rescale_calibration_targets(
 
 
 if __name__ == "__main__":
-    # Local SQLite database Ben created
-    db_uri = "sqlite:///src/policyengine_data/calibration/policy_data.db"
+    # Connection to database in huggingface hub
+    db_uri = download_database()
 
     results = rescale_calibration_targets(db_uri=db_uri)
 
