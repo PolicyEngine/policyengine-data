@@ -44,7 +44,12 @@ def download_database(
 
 
 def fetch_targets_from_database(
-    engine, time_period: int, reform_id: Optional[int] = 0
+    engine,
+    time_period: int,
+    reform_id: Optional[int] = 0,
+    stratum_filter_variable: Optional[str] = None,
+    stratum_filter_value: Optional[str] = None,
+    stratum_filter_operation: Optional[str] = None,
 ) -> pd.DataFrame:
     """
     Fetch all targets for a specific time period and reform from the database.
@@ -53,10 +58,14 @@ def fetch_targets_from_database(
         engine: SQLAlchemy engine
         time_period: The year to fetch targets for
         reform_id: The reform scenario ID (0 for baseline)
+        stratum_filter_variable: Optional variable name to filter strata by
+        stratum_filter_value: Optional value to filter strata by
+        stratum_filter_operation: Optional operation for filtering ('equals', 'in', etc.)
 
     Returns:
         DataFrame with target data including target_id, variable, value, etc.
     """
+    # Base query
     query = """
     SELECT 
         t.target_id,
@@ -74,12 +83,39 @@ def fetch_targets_from_database(
     JOIN strata s ON t.stratum_id = s.stratum_id
     WHERE t.period = :period
       AND t.reform_id = :reform_id
-    ORDER BY t.target_id
     """
 
-    return pd.read_sql(
-        query, engine, params={"period": time_period, "reform_id": reform_id}
-    )
+    params = {"period": time_period, "reform_id": reform_id}
+
+    # Add stratum filtering if specified
+    if all(
+        [
+            stratum_filter_variable,
+            stratum_filter_value,
+            stratum_filter_operation,
+        ]
+    ):
+        # Add join with stratum_constraints and apply filter
+        query += """
+      AND t.stratum_id IN (
+          SELECT sc.stratum_id 
+          FROM stratum_constraints sc 
+          WHERE sc.constraint_variable = :filter_variable
+            AND sc.operation = :filter_operation
+            AND sc.value = :filter_value
+      )
+        """
+        params.update(
+            {
+                "filter_variable": stratum_filter_variable,
+                "filter_operation": stratum_filter_operation,
+                "filter_value": stratum_filter_value,
+            }
+        )
+
+    query += " ORDER BY t.target_id"
+
+    return pd.read_sql(query, engine, params=params)
 
 
 def fetch_stratum_constraints(engine, stratum_id: int) -> pd.DataFrame:
@@ -356,6 +392,9 @@ def create_metrics_matrix(
     sim: Optional[Microsimulation] = None,
     dataset: Optional[type] = None,
     reform_id: Optional[int] = 0,
+    stratum_filter_variable: Optional[str] = None,
+    stratum_filter_value: Optional[str] = None,
+    stratum_filter_operation: Optional[str] = None,
 ) -> Tuple[pd.DataFrame, np.ndarray, Dict[int, Dict[str, any]]]:
     """
     Create the metrics matrix from the targets database.
@@ -371,6 +410,9 @@ def create_metrics_matrix(
         sim: Optional existing Microsimulation instance
         dataset: Optional dataset type for creating new simulation
         reform_id: Reform scenario ID (0 for baseline)
+        stratum_filter_variable: Optional variable name to filter strata by
+        stratum_filter_value: Optional value to filter strata by
+        stratum_filter_operation: Optional operation for filtering ('equals', 'in', etc.)
 
     Returns:
         Tuple of:
@@ -396,7 +438,14 @@ def create_metrics_matrix(
     n_households = len(household_ids)
 
     # Fetch all targets from database
-    targets_df = fetch_targets_from_database(engine, time_period, reform_id)
+    targets_df = fetch_targets_from_database(
+        engine,
+        time_period,
+        reform_id,
+        stratum_filter_variable,
+        stratum_filter_value,
+        stratum_filter_operation,
+    )
     logger.info(
         f"Processing {len(targets_df)} targets for period {time_period}"
     )
@@ -408,7 +457,7 @@ def create_metrics_matrix(
     target_ids = []
 
     # Process each target
-    for idx, target in targets_df.iterrows():
+    for _, target in targets_df.iterrows():
         target_id = target["target_id"]
 
         try:
