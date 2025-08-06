@@ -43,6 +43,7 @@ def download_database(
         raise ValueError(f"An error occurred: {e}")
 
 
+# NOTE (juaristi22): This could fail if trying to filter by more than one stratum constraint if there are mismatches between the filtering variable, value and operation.
 def fetch_targets_from_database(
     engine,
     time_period: int,
