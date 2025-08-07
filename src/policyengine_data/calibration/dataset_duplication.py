@@ -1,8 +1,6 @@
 from typing import Any, Optional
 
-import numpy as np
 import pandas as pd
-from policyengine_core.enums import Enum
 from policyengine_us.variables.household.demographic.geographic.county.county_enum import (
     County,
 )
