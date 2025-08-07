@@ -15,3 +15,8 @@
     changed:
     - Added logic to rescale calibration targets from a database.
   date: 2025-08-06 14:12:21
+- bump: minor
+  changes:
+    added:
+    - Key normalisation functionality.
+  date: 2025-08-07 09:28:18
