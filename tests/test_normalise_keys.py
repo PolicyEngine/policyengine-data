@@ -33,6 +33,24 @@ class TestNormaliseTableKeys:
         assert list(normalised_users["user_id"]) == [0, 1, 2]
         assert list(normalised_users["name"]) == ["Alice", "Bob", "Carol"]
 
+    def test_custom_start_index(self):
+        """Test normalisation with custom start index."""
+        users = pd.DataFrame(
+            {"user_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
+        )
+
+        tables = {"users": users}
+        primary_keys = {"users": "user_id"}
+
+        result = normalise_table_keys(tables, primary_keys, start_index=10)
+
+        assert len(result) == 1
+        assert "users" in result
+
+        normalised_users = result["users"]
+        assert list(normalised_users["user_id"]) == [10, 11, 12]
+        assert list(normalised_users["name"]) == ["Alice", "Bob", "Carol"]
+
     def test_two_tables_with_foreign_keys(self):
         """Test normalisation with explicit foreign key relationships."""
         users = pd.DataFrame(
