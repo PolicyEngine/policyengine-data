@@ -2,10 +2,11 @@ from typing import Any, Optional
 
 import pandas as pd
 from policyengine_us import Microsimulation
-from policyengine_us.variables.household.demographic.geographic.county.county_enum import (
-    County,
+from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
+    UCGID,
 )
 
+from ..dataset_legacy import Dataset
 from ..single_year_dataset import SingleYearDataset
 
 """
@@ -17,7 +18,7 @@ def load_dataset_for_geography_legacy(
     year: Optional[int] = 2023,
     dataset: Optional[str] = None,
     geography_variable: Optional[str] = "ucgid",
-    geography_identifier: Optional[Any] = County.cast("0100000US"),
+    geography_identifier: Optional[Any] = UCGID("0100000US"),
 ) -> "Microsimulation":
     """
     Load the necessary dataset from the legacy Dataset class, making it specific to a geography area. (e.g., CPS for the state of California).
@@ -34,13 +35,12 @@ def load_dataset_for_geography_legacy(
     if dataset is None:
         dataset = f"hf://policyengine/policyengine-us-data/cps_{year}.h5"
 
-    sim = Microsimulation()
-    sim.dataset = dataset
+    sim = Microsimulation(dataset=dataset)
     sim.default_input_period = year
+    sim.build_from_dataset()
     hhs = len(sim.calculate("household_id").values)
     geo_values = [geography_identifier] * hhs
     sim.set_input(geography_variable, year, geo_values)
-    sim.build_from_dataset()
 
     return sim
 
@@ -62,8 +62,6 @@ def minimize_calibrated_dataset_legacy(
     Returns:
         SingleYearDataset: The regularized dataset
     """
-    from policyengine_core import Dataset
-
     sim.set_input("household_weight", year, optimized_sparse_weights)
 
     df = sim.to_input_dataframe()  # Not at household level
@@ -101,7 +99,7 @@ def load_dataset_for_geography(
     year: Optional[int] = 2023,
     dataset: Optional[str] = None,
     geography_variable: Optional[str] = "ucgid",
-    geography_identifier: Optional[Any] = County.cast("0100000US"),
+    geography_identifier: Optional[Any] = UCGID("0100000US"),
 ) -> "SingleYearDataset":
     """
     Load the necessary dataset from the legacy Dataset class into the new SingleYearDataset, or directly from it, making it specific to a geography area. (e.g., CPS for the state of California).

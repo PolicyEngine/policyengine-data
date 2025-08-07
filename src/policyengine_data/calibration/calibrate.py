@@ -3,6 +3,7 @@ This file will contain the logic for calibrating policy engine data from start t
 """
 
 import logging
+from turtle import pd
 from typing import Dict, Optional
 
 import numpy as np
@@ -84,14 +85,16 @@ def calibrate_geography_level(
                 excluded_targets.append(target_id)
 
         from policyengine_us.variables.household.demographic.geographic.county.county_enum import (
-            County,
+            UCGID,
         )
 
         sim_data_to_calibrate = load_dataset_for_geography_legacy(
             year=year,
             dataset=dataset,
             geography_variable=geo_sim_filter_variable,
-            geography_identifier=County.cast(geo_identifier),
+            geography_identifier=UCGID(
+                geo_identifier
+            ),  # will need a non-hardcoded solution to assign geography_identifier in the future
         )
         weights = sim_data_to_calibrate.calculate("household_weight").values
 
@@ -128,3 +131,35 @@ def calibrate_geography_level(
                 foreign_keys={"person": {"household_id": "household"}},
                 start_index=None,
             )
+        else:
+            previous_person_id_max = (
+                geography_level_calibrated_dataset.entities["person_id"].max()
+            )
+            previous_household_id_max = (
+                geography_level_calibrated_dataset.entities[
+                    "household_id"
+                ].max()
+            )
+            single_year_calibrated_dataset.entities = normalise_table_keys(
+                single_year_calibrated_dataset.entities,
+                primary_keys={
+                    "person": "person_id",
+                    "household": "household_id",
+                },
+                foreign_keys={"person": {"household_id": "household"}},
+                start_index={
+                    "person": previous_person_id_max + 1,
+                    "household": previous_household_id_max + 1,
+                },
+            )
+
+            geography_level_calibrated_dataset.entities = {
+                entity: pd.concat(
+                    [
+                        geography_level_calibrated_dataset.entities[entity],
+                        single_year_calibrated_dataset.entities[entity],
+                    ],
+                    ignore_index=True,
+                )
+                for entity in geography_level_calibrated_dataset.entities
+            }
