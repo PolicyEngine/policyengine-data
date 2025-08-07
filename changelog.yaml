@@ -1,5 +1,17 @@
 - changes:
     added:
     - Initialized project.
-  date: 2025-07-22
+  date: 2025-07-22 00:00:00
   version: 0.1.0
+- bump: minor
+  changes:
+    changed:
+    - Added Single and Multi Year Dataset classes.
+    - Added data download and upload functionality.
+    - Make .sh files executable.
+  date: 2025-07-28 16:55:16
+- bump: minor
+  changes:
+    changed:
+    - Added logic to rescale calibration targets from a database.
+  date: 2025-08-06 14:12:21
