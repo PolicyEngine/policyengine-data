@@ -126,5 +126,5 @@ def calibrate_geography_level(
                     "household": "household_id",
                 },
                 foreign_keys={"person": {"household_id": "household"}},
-                start_index=0,  # each id may need a different start index
+                start_index=None,
             )

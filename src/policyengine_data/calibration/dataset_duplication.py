@@ -1,10 +1,10 @@
 from typing import Any, Optional
 
 import pandas as pd
+from policyengine_us import Microsimulation
 from policyengine_us.variables.household.demographic.geographic.county.county_enum import (
     County,
 )
-from policyeninge_core import Dataset, Microsimulation
 
 from ..single_year_dataset import SingleYearDataset
 
@@ -31,8 +31,6 @@ def load_dataset_for_geography_legacy(
     Returns:
         Microsimulation: The Microsimulation object with the specified geography.
     """
-    from policyengine_us import Microsimulation
-
     if dataset is None:
         dataset = f"hf://policyengine/policyengine-us-data/cps_{year}.h5"
 
@@ -64,6 +62,8 @@ def minimize_calibrated_dataset_legacy(
     Returns:
         SingleYearDataset: The regularized dataset
     """
+    from policyengine_core import Dataset
+
     sim.set_input("household_weight", year, optimized_sparse_weights)
 
     df = sim.to_input_dataframe()  # Not at household level
