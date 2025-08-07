@@ -14,7 +14,7 @@ dependencies = [
     "huggingface_hub>=0.25.1",
     "tables",
     "policyengine-core>=3.6.4",
-    "policyengine-us>=1.353.0",
+    "policyengine-us>=1.366.0",
     "microdf-python",
     "sqlalchemy",
     "huggingface_hub",

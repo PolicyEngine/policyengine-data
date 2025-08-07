@@ -1,4 +1,5 @@
 - bump: minor
   changes:
-    changed:
-    - Added logic to create estimate matrix for calibration from a database.
+    added:
+    - Logic to create estimate matrix for calibration from a database.
+    - Conversion functions between dataset classes to enable stacking datasets.
