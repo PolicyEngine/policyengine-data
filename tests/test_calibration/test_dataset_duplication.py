@@ -1,0 +1,84 @@
+"""
+Test the logic for assigning a dataset to a geographic level and minimizing it.
+"""
+
+from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
+    UCGID,
+)
+from policyengine_data import SingleYearDataset
+
+
+def test_dataset_assignment_to_geography() -> None:
+    """Test that a dataset can be assigned to a geographic level without errors."""
+    from policyengine_data.calibration import load_dataset_for_geography_legacy
+
+    sim = load_dataset_for_geography_legacy()
+
+    assert hasattr(sim, "dataset")
+    assert hasattr(sim, "default_input_period")
+    assert sim.default_input_period == 2023
+
+    # Verify household data exists
+    household_ids = sim.calculate("household_id").values
+    assert len(household_ids) > 0
+
+    # Verify geography is set correctly
+    ucgid_values = sim.calculate("ucgid").values
+    expected_ucgid = UCGID("0100000US")
+    # The system returns enum names as strings, so compare with the name
+    assert all(val == expected_ucgid.name for val in ucgid_values)
+
+    # Test with California state identifier
+    california_ucgid = UCGID("0400000US06")
+    sim = load_dataset_for_geography_legacy(
+        geography_identifier=california_ucgid
+    )
+
+    # Verify geography is set correctly
+    ucgid_values = sim.calculate("ucgid").values
+    # The system returns enum names as strings, so compare with the name
+    assert all(val == california_ucgid.name for val in ucgid_values)
+
+
+def test_dataset_minimization() -> None:
+    """Test that a dataset can be minimized using sparse weights."""
+    from policyengine_data.calibration import (
+        minimize_calibrated_dataset_legacy,
+    )
+    from policyengine_us import Microsimulation
+    import pandas as pd
+
+    # Load the dataset
+    sim = Microsimulation(
+        dataset="hf://policyengine/policyengine-us-data/cps_2023.h5"
+    )
+    sim.default_input_period = 2023
+    sim.build_from_dataset()
+
+    before_minimizing = SingleYearDataset.from_simulation(
+        sim, time_period=2023
+    )
+    before_minimizing.time_period = 2023
+
+    # Create dummy sparse weights
+    household_ids = sim.calculate("household_id").values
+    optimized_sparse_weights = pd.Series(
+        [1.0] * (len(household_ids) // 2)
+        + [0.0] * (len(household_ids) - (len(household_ids) // 2))
+    )
+
+    # Minimize the dataset
+    after_minimizing = minimize_calibrated_dataset_legacy(
+        sim, year=2023, optimized_sparse_weights=optimized_sparse_weights
+    )
+
+    assert len(before_minimizing.entities["household"]) > len(
+        after_minimizing.entities["household"]
+    )
+    assert (
+        abs(
+            len(before_minimizing.entities["household"])
+            - 2 * len(after_minimizing.entities["household"])
+        )
+        < 2
+    )

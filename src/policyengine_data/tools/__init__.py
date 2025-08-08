@@ -1,2 +1,3 @@
 from .hugging_face import download_huggingface_dataset, get_or_prompt_hf_token
+from .legacy_class_conversions import SingleYearDataset_to_Dataset
 from .win_file_manager import WindowsAtomicFileManager
