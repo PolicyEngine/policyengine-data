@@ -163,9 +163,6 @@ def calculate_variable_at_household_level(
     values_entity = sim.tax_benefit_system.variables[variable].entity.key
 
     # Map to household level if needed
-
-    # THIS WILL NOT WORK FOR EVERY VARIABLE
-    # it will sum people ages instead of storing how many people are aged a specific number
     if values_entity != "household":
         values = sim.map_result(values, values_entity, "household")
 
@@ -227,16 +224,21 @@ def apply_single_constraint(
             # Check if any of the constraint values are contained in the string representation
             mask = np.zeros(len(values), dtype=bool)
             for cv in constraint_value:
-                mask |= np.array([str(cv) in str(v) for v in values])
+                mask |= np.array(
+                    [str(cv) in str(v) for v in values], dtype=bool
+                )
             return mask
         else:
             # Single value - check if it's contained in each value's string representation
-            return np.array([str(constraint_value) in str(v) for v in values])
+            return np.array(
+                [str(constraint_value) in str(v) for v in values], dtype=bool
+            )
 
     if operation not in operations:
         raise ValueError(f"Unknown operation: {operation}")
 
-    return operations[operation](values, constraint_value)
+    result = operations[operation](values, constraint_value)
+    return np.array(result, dtype=bool)
 
 
 def create_constraint_mask(
@@ -262,26 +264,69 @@ def create_constraint_mask(
     # Start with all True
     combined_mask = np.ones(n_households, dtype=bool)
 
-    # Apply each constraint
+    # "age" is a special variable that cannot be directly mapped to household level
+    age_constraints = constraints_df[
+        constraints_df["constraint_variable"] == "age"
+    ]
+    if not age_constraints.empty:
+        age = sim.calculate("age").values
+
+        # Get lower and upper bounds
+        lower_constraints = age_constraints[
+            age_constraints["operation"] == "greater_than_or_equal"
+        ]
+        upper_constraints = age_constraints[
+            age_constraints["operation"] == "less_than"
+        ]
+
+        # Extract bounds if they exist
+        lower_bound = (
+            float(lower_constraints["value"].iloc[0])
+            if not lower_constraints.empty
+            else None
+        )
+        upper_bound = (
+            float(upper_constraints["value"].iloc[0])
+            if not upper_constraints.empty
+            else None
+        )
+
+        # Create person mask based on available bounds
+        if lower_bound is not None and upper_bound is not None:
+            person_mask = (age >= lower_bound) & (age < upper_bound)
+        elif lower_bound is not None:
+            person_mask = age >= lower_bound
+        else:  # upper_bound is not Nonei
+            person_mask = age < upper_bound
+
+        # Ensure person_mask is boolean
+        person_mask = np.array(person_mask, dtype=bool)
+
+        in_age_range = sim.map_result(person_mask, "person", "household")
+        in_age_range = np.array(in_age_range, dtype=bool)
+        combined_mask = combined_mask & in_age_range
+
+    # Apply remaining constraints
     for _, constraint in constraints_df.iterrows():
         # Calculate the constraint variable at household level
-        variable_values = calculate_variable_at_household_level(
-            sim,
-            constraint["constraint_variable"],
-        )
+        if constraint["constraint_variable"] != "age":
+            variable_values = calculate_variable_at_household_level(
+                sim,
+                constraint["constraint_variable"],
+            )
 
-        # Parse the constraint value
-        parsed_value = parse_constraint_value(
-            constraint["value"], constraint["operation"]
-        )
+            # Parse the constraint value
+            parsed_value = parse_constraint_value(
+                constraint["value"], constraint["operation"]
+            )
 
-        # Apply the constraint
-        constraint_mask = apply_single_constraint(
-            variable_values, constraint["operation"], parsed_value
-        )
+            # Apply the constraint
+            constraint_mask = apply_single_constraint(
+                variable_values, constraint["operation"], parsed_value
+            )
 
-        # Combine with AND logic
-        combined_mask &= constraint_mask
+            # Combine with AND logic
+            combined_mask = combined_mask & constraint_mask
 
     return combined_mask
 
