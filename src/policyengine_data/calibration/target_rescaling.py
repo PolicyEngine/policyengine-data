@@ -35,7 +35,7 @@ def download_database(
         downloaded_path = hf_hub_download(
             repo_id=repo_id,
             filename=filename,
-            local_dir=".",  # Use "." for the current working directory
+            local_dir="download/",
             local_dir_use_symlinks=False,  # Recommended to avoid symlinks
         )
         path = os.path.abspath(downloaded_path)

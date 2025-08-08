@@ -8,21 +8,24 @@ from typing import Dict, Optional
 
 import numpy as np
 
-from .. import normalise_table_keys
-from .dataset_duplication import (
+from policyengine_data import normalise_table_keys
+from policyengine_data.calibration.dataset_duplication import (
     load_dataset_for_geography_legacy,
     minimize_calibrated_dataset_legacy,
 )
-from .metrics_matrix_creation import (
+from policyengine_data.calibration.metrics_matrix_creation import (
     create_metrics_matrix,
     validate_metrics_matrix,
 )
-from .target_rescaling import download_database, rescale_calibration_targets
+from policyengine_data.calibration.target_rescaling import (
+    download_database,
+    rescale_calibration_targets,
+)
 
 logger = logging.getLogger(__name__)
 
 
-areas_in_geography_level = {"California": "0400000US06"}
+areas_in_state_level = {"California": "0400000US06"}
 
 
 def calibrate_geography_level(
@@ -55,6 +58,7 @@ def calibrate_geography_level(
     if db_uri is None:
         db_uri = download_database()
 
+    # Rescale targets for consistency across geography areas
     rescaling_results = rescale_calibration_targets(
         db_uri=db_uri, update_database=True
     )
@@ -63,6 +67,7 @@ def calibrate_geography_level(
     for area, geo_identifier in calibration_areas.items():
         logger.info(f"Calibrating dataset for {area}...")
 
+        # Create metrics matrix for the area based on strata constraints
         metrics_matrix, targets, target_info = create_metrics_matrix(
             db_uri=db_uri,
             time_period=year,
@@ -77,14 +82,15 @@ def calibrate_geography_level(
             target_info=target_info,
         )
 
-        target_names = np.array()
+        target_names = []
         excluded_targets = []
         for target_id, info in target_info.items():
-            target_names = np.append(target_names, info["name"])
+            target_names.append(info["name"])
             if not info["active"]:
                 excluded_targets.append(target_id)
+        target_names = np.array(target_names)
 
-        from policyengine_us.variables.household.demographic.geographic.county.county_enum import (
+        from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
             UCGID,
         )
 
@@ -98,6 +104,12 @@ def calibrate_geography_level(
         )
         weights = sim_data_to_calibrate.calculate("household_weight").values
 
+        print(
+            "younger than 15:",
+            (sim_data_to_calibrate.calculate("age") < 15).sum(),
+        )
+
+        # Calibrate with L0 regularization
         from microcalibrate import Calibration
 
         calibrator = Calibration(
@@ -105,7 +117,8 @@ def calibrate_geography_level(
             targets=targets,
             target_names=target_names,
             estimate_matrix=metrics_matrix,
-            epochs=200,
+            epochs=300,
+            learning_rate=0.2,
             excluded_targets=(
                 excluded_targets if len(excluded_targets) > 0 else None
             ),
@@ -114,43 +127,61 @@ def calibrate_geography_level(
         performance_log = calibrator.calibrate()
         optimized_sparse_weights = calibrator.sparse_weights
 
+        # Minimize the calibrated dataset storing only records with non-zero weights
         single_year_calibrated_dataset = minimize_calibrated_dataset_legacy(
             sim=sim_data_to_calibrate,
             year=year,
             optimized_sparse_weights=optimized_sparse_weights,
         )
 
+        # Detect ids that require resetting after minimization
+        primary_id_variables = {}
+        for entity in single_year_calibrated_dataset.entities:
+            primary_id_variables[entity] = f"{entity}_id"
+
+        foreign_id_variables = {}
+        for entity in single_year_calibrated_dataset.entities:
+            entity_foreign_keys = {}
+            for target_entity in single_year_calibrated_dataset.entities:
+                if entity != target_entity:
+                    foreign_key_name = f"{entity}_{target_entity}_id"
+                    if (
+                        foreign_key_name
+                        in sim_data_to_calibrate.tax_benefit_system.variables
+                    ) and (
+                        foreign_key_name
+                        in single_year_calibrated_dataset.entities[
+                            entity
+                        ].columns
+                    ):
+                        entity_foreign_keys[foreign_key_name] = target_entity
+
+            if entity_foreign_keys:
+                foreign_id_variables[entity] = entity_foreign_keys
+
+        # Combine area datasets
         if geography_level_calibrated_dataset is None:
             geography_level_calibrated_dataset = single_year_calibrated_dataset
             single_year_calibrated_dataset.entities = normalise_table_keys(
                 single_year_calibrated_dataset.entities,
-                primary_keys={
-                    "person": "person_id",
-                    "household": "household_id",
-                },
-                foreign_keys={"person": {"household_id": "household"}},
+                primary_keys=primary_id_variables,
+                foreign_keys=foreign_id_variables,
                 start_index=None,
             )
         else:
-            previous_person_id_max = (
-                geography_level_calibrated_dataset.entities["person_id"].max()
-            )
-            previous_household_id_max = (
-                geography_level_calibrated_dataset.entities[
-                    "household_id"
-                ].max()
-            )
+            previous_max_ids = {}
+            for entity in single_year_calibrated_dataset.entities:
+                previous_max_ids[entity] = (
+                    geography_level_calibrated_dataset.entities[entity][
+                        f"{entity}_id"
+                    ].max()
+                )
+
             single_year_calibrated_dataset.entities = normalise_table_keys(
                 single_year_calibrated_dataset.entities,
-                primary_keys={
-                    "person": "person_id",
-                    "household": "household_id",
-                },
-                foreign_keys={"person": {"household_id": "household"}},
-                start_index={
-                    "person": previous_person_id_max + 1,
-                    "household": previous_household_id_max + 1,
-                },
+                primary_keys=primary_id_variables,
+                foreign_keys=foreign_id_variables,
+                start_index=previous_max_ids,
             )
 
             geography_level_calibrated_dataset.entities = {
@@ -163,3 +194,24 @@ def calibrate_geography_level(
                 )
                 for entity in geography_level_calibrated_dataset.entities
             }
+
+    return (
+        geography_level_calibrated_dataset,
+        performance_log,
+        metrics_evaluation,
+    )
+
+
+if __name__ == "__main__":
+    state_level_calibrated_dataset, performance_log, metrics_evaluation = (
+        calibrate_geography_level(
+            areas_in_state_level,
+            "hf://policyengine/policyengine-us-data/cps_2023.h5",
+            db_uri="sqlite:///policy_data.db",
+        )
+    )
+
+    print("Completed calibration for state level dataset.")
+
+    performance_log.to_csv("calibration_log.csv")
+    metrics_evaluation.to_csv("metrics_evaluation.csv")
