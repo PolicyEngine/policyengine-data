@@ -159,9 +159,13 @@ def calculate_variable_at_household_level(
         Array of values at household level
     """
     values = sim.calculate(variable).values
+
     values_entity = sim.tax_benefit_system.variables[variable].entity.key
 
     # Map to household level if needed
+
+    # THIS WILL NOT WORK FOR EVERY VARIABLE
+    # it will sum people ages instead of storing how many people are aged a specific number
     if values_entity != "household":
         values = sim.map_result(values, values_entity, "household")
 

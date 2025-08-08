@@ -3,10 +3,10 @@ This file will contain the logic for calibrating policy engine data from start t
 """
 
 import logging
-from turtle import pd
 from typing import Dict, Optional
 
 import numpy as np
+import pandas as pd
 
 from policyengine_data import normalise_table_keys
 from policyengine_data.calibration.dataset_duplication import (
@@ -25,7 +25,13 @@ from policyengine_data.calibration.target_rescaling import (
 logger = logging.getLogger(__name__)
 
 
-areas_in_state_level = {"California": "0400000US06"}
+areas_in_state_level = {
+    "Alabama": "0400000US01",
+    "Alaska": "0400000US02",
+    "Arizona": "0400000US04",
+    "Arkansas": "0400000US05",
+    "California": "0400000US06",
+}
 
 
 def calibrate_geography_level(
@@ -81,6 +87,7 @@ def calibrate_geography_level(
             targets,
             target_info=target_info,
         )
+        metrics_evaluation.to_csv(f"{area}_metrics_evaluation.csv")
 
         target_names = []
         excluded_targets = []
@@ -125,6 +132,7 @@ def calibrate_geography_level(
             regularize_with_l0=True,
         )
         performance_log = calibrator.calibrate()
+        performance_log.to_csv(f"{area}_calibration_log.csv")
         optimized_sparse_weights = calibrator.sparse_weights
 
         # Minimize the calibrated dataset storing only records with non-zero weights
@@ -192,26 +200,22 @@ def calibrate_geography_level(
                     ],
                     ignore_index=True,
                 )
-                for entity in geography_level_calibrated_dataset.entities
+                for entity in geography_level_calibrated_dataset.entities.keys()
             }
 
-    return (
-        geography_level_calibrated_dataset,
-        performance_log,
-        metrics_evaluation,
-    )
+    return geography_level_calibrated_dataset
 
 
 if __name__ == "__main__":
-    state_level_calibrated_dataset, performance_log, metrics_evaluation = (
-        calibrate_geography_level(
-            areas_in_state_level,
-            "hf://policyengine/policyengine-us-data/cps_2023.h5",
-            db_uri="sqlite:///policy_data.db",
-        )
+    state_level_calibrated_dataset = calibrate_geography_level(
+        areas_in_state_level,
+        "hf://policyengine/policyengine-us-data/cps_2023.h5",
+        db_uri="sqlite:///policy_data.db",
     )
 
     print("Completed calibration for state level dataset.")
 
-    performance_log.to_csv("calibration_log.csv")
-    metrics_evaluation.to_csv("metrics_evaluation.csv")
+    print(
+        "Number of household records:",
+        len(state_level_calibrated_dataset.entities["household"]),
+    )

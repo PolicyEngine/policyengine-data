@@ -45,9 +45,6 @@ def load_dataset_for_geography_legacy(
     return sim
 
 
-# Calibrate and regularize the dataset and save sparse_weights
-
-
 def minimize_calibrated_dataset_legacy(
     sim: Microsimulation, year: int, optimized_sparse_weights: pd.Series
 ) -> "SingleYearDataset":
@@ -133,10 +130,6 @@ def load_dataset_for_geography(
     single_year_dataset.entities["household"] = household_vars
 
     return single_year_dataset
-
-
-# Calibrate and regularize the dataset and save sparse_weights
-# single_year_dataset.entities["household"]["household_sparse_weight"] = optimized_weights_sparse
 
 
 def minimize_calibrated_dataset(

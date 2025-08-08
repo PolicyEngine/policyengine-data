@@ -11,7 +11,8 @@ def test_matrix_creation() -> None:
     )
 
     # Download database from Hugging Face Hub
-    db_uri = download_database()
+    db_uri = "sqlite:///policy_data.db"
+    # download_database()
 
     # Create metrics matrix
     metrics_matrix, target_values, target_info = create_metrics_matrix(
@@ -29,5 +30,7 @@ def test_matrix_creation() -> None:
     assert metrics_matrix.columns.tolist() == [
         i for i in range(1, 937)
     ], "Metrics matrix columns do not match expected target ids"
-    # once ucgid_str is fixed in -us and the database we can add asserts that ensure we see the expected values for target columns
-    # assert metrics_matrix.iloc[:, 0].sum() != 0, "The first column of the metrics matrix should not be full of zeros"
+    assert all(
+        validation_results[validation_results["target_id"] < 19]["estimate"]
+        != 0
+    ), "Metrics matrix should have all estimates non-zero for federal age targets"
