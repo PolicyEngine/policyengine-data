@@ -145,30 +145,6 @@ def fetch_stratum_constraints(engine, stratum_id: int) -> pd.DataFrame:
     return pd.read_sql(query, engine, params={"stratum_id": stratum_id})
 
 
-def calculate_variable_at_household_level(
-    sim: Microsimulation, variable: str
-) -> np.ndarray:
-    """
-    Calculate a variable and ensure it's at the household level.
-
-    Args:
-        sim: Microsimulation instance
-        variable: Variable name to calculate
-
-    Returns:
-        Array of values at household level
-    """
-    values = sim.calculate(variable).values
-
-    values_entity = sim.tax_benefit_system.variables[variable].entity.key
-
-    # Map to household level if needed
-    if values_entity != "household":
-        values = sim.map_result(values, values_entity, "household")
-
-    return values
-
-
 def parse_constraint_value(value: str, operation: str):
     """
     Parse constraint value based on its type and operation.
@@ -221,7 +197,6 @@ def apply_single_constraint(
     # "in" operation - check if constraint value is contained in string values
     if operation == "in":
         if isinstance(constraint_value, list):
-            # Check if any of the constraint values are contained in the string representation
             mask = np.zeros(len(values), dtype=bool)
             for cv in constraint_value:
                 mask |= np.array(
@@ -229,7 +204,6 @@ def apply_single_constraint(
                 )
             return mask
         else:
-            # Single value - check if it's contained in each value's string representation
             return np.array(
                 [str(constraint_value) in str(v) for v in values], dtype=bool
             )
@@ -241,94 +215,121 @@ def apply_single_constraint(
     return np.array(result, dtype=bool)
 
 
-def create_constraint_mask(
-    sim: Microsimulation, constraints_df: pd.DataFrame
+def apply_constraints_at_entity_level(
+    sim: Microsimulation, constraints_df: pd.DataFrame, target_entity: str
 ) -> np.ndarray:
     """
-    Create a boolean mask for households that meet all stratum constraints.
+    Create a boolean mask at the target entity level by applying all constraints.
 
     Args:
         sim: Microsimulation instance
         constraints_df: DataFrame with constraint data
+        target_entity: Entity level of the target variable ('person', 'tax_unit', 'household', etc.)
 
     Returns:
-        Boolean array at household level
+        Boolean array at the target entity level
     """
-    # Get number of households
-    n_households = len(sim.calculate("household_id").values)
-
-    # If no constraints, all households are included
-    if constraints_df.empty:
-        return np.ones(n_households, dtype=bool)
+    # Get the number of entities at the target level
+    entity_count = len(sim.calculate(f"{target_entity}_id").values)
 
     # Start with all True
-    combined_mask = np.ones(n_households, dtype=bool)
+    if constraints_df.empty:
+        return np.ones(entity_count, dtype=bool)
+    combined_mask = np.ones(entity_count, dtype=bool)
 
-    # "age" is a special variable that cannot be directly mapped to household level
-    age_constraints = constraints_df[
-        constraints_df["constraint_variable"] == "age"
-    ]
-    if not age_constraints.empty:
-        age = sim.calculate("age").values
-
-        # Get lower and upper bounds
-        lower_constraints = age_constraints[
-            age_constraints["operation"] == "greater_than_or_equal"
-        ]
-        upper_constraints = age_constraints[
-            age_constraints["operation"] == "less_than"
-        ]
-
-        # Extract bounds if they exist
-        lower_bound = (
-            float(lower_constraints["value"].iloc[0])
-            if not lower_constraints.empty
-            else None
-        )
-        upper_bound = (
-            float(upper_constraints["value"].iloc[0])
-            if not upper_constraints.empty
-            else None
-        )
-
-        # Create person mask based on available bounds
-        if lower_bound is not None and upper_bound is not None:
-            person_mask = (age >= lower_bound) & (age < upper_bound)
-        elif lower_bound is not None:
-            person_mask = age >= lower_bound
-        else:  # upper_bound is not Nonei
-            person_mask = age < upper_bound
-
-        # Ensure person_mask is boolean
-        person_mask = np.array(person_mask, dtype=bool)
-
-        in_age_range = sim.map_result(person_mask, "person", "household")
-        in_age_range = np.array(in_age_range, dtype=bool)
-        combined_mask = combined_mask & in_age_range
-
-    # Apply remaining constraints
+    # Apply each constraint
     for _, constraint in constraints_df.iterrows():
-        # Calculate the constraint variable at household level
-        if constraint["constraint_variable"] != "age":
-            variable_values = calculate_variable_at_household_level(
-                sim,
-                constraint["constraint_variable"],
+        constraint_var = constraint["constraint_variable"]
+
+        constraint_values = sim.calculate(constraint_var).values
+        constraint_entity = sim.tax_benefit_system.variables[
+            constraint_var
+        ].entity.key
+
+        parsed_value = parse_constraint_value(
+            constraint["value"], constraint["operation"]
+        )
+
+        # Apply the constraint at its native level
+        constraint_mask = apply_single_constraint(
+            constraint_values, constraint["operation"], parsed_value
+        )
+
+        # Map the constraint mask to the target entity level if needed
+        if constraint_entity != target_entity:
+            constraint_mask = sim.map_result(
+                constraint_mask, constraint_entity, target_entity
             )
 
-            # Parse the constraint value
-            parsed_value = parse_constraint_value(
-                constraint["value"], constraint["operation"]
-            )
+        # Ensure it's boolean
+        constraint_mask = np.array(constraint_mask, dtype=bool)
 
-            # Apply the constraint
-            constraint_mask = apply_single_constraint(
-                variable_values, constraint["operation"], parsed_value
-            )
+        # Combine
+        combined_mask = combined_mask & constraint_mask
 
-            # Combine with AND logic
-            combined_mask = combined_mask & constraint_mask
+        assert (
+            len(combined_mask) == entity_count
+        ), f"Combined mask length {len(combined_mask)} does not match entity count {entity_count}."
 
     return combined_mask
+
+
+def process_single_target(
+    sim: Microsimulation,
+    target: pd.Series,
+    constraints_df: pd.DataFrame,
+) -> Tuple[np.ndarray, Dict[str, any]]:
+    """
+    Process a single target by applying constraints at the appropriate entity level.
+
+    Args:
+        sim: Microsimulation instance
+        target: pandas Series with target data
+        constraints_df: DataFrame with constraint data
+
+    Returns:
+        Tuple of (metric_values at household level, target_info_dict)
+    """
+    target_var = target["variable"]
+    target_entity = sim.tax_benefit_system.variables[target_var].entity.key
+
+    # Create constraint mask at the target entity level
+    entity_mask = apply_constraints_at_entity_level(
+        sim, constraints_df, target_entity
+    )
+
+    # Calculate the target variable at its native level
+    target_values = sim.calculate(target_var).values
+
+    # Apply the mask at the entity level
+    masked_values = target_values * entity_mask
+    masked_values_sum_true = masked_values.sum()
+
+    # Map the masked result to household level
+    if target_entity != "household":
+        household_values = sim.map_result(
+            masked_values, target_entity, "household"
+        )
+    else:
+        household_values = masked_values
+
+    household_values_sum = household_values.sum()
+
+    if target_var == "person_count":
+        assert (
+            household_values_sum == masked_values_sum_true
+        ), f"Household values sum {household_values_sum} does not match masked values sum {masked_values_sum_true} for person_count with age constraints."
+
+    # Build target info dictionary
+    target_info = {
+        "name": build_target_name(target["variable"], constraints_df),
+        "active": bool(target["active"]),
+        "tolerance": (
+            target["tolerance"] if pd.notna(target["tolerance"]) else None
+        ),
+    }
+
+    return household_values, target_info
 
 
 def parse_constraint_for_name(constraint: pd.Series) -> str:
@@ -397,43 +398,6 @@ def build_target_name(variable: str, constraints_df: pd.DataFrame) -> str:
             parts.append(parse_constraint_for_name(constraint))
 
     return "_".join(parts)
-
-
-def process_single_target(
-    sim: Microsimulation,
-    target: pd.Series,
-    constraints_df: pd.DataFrame,
-) -> Tuple[np.ndarray, Dict[str, any]]:
-    """
-    Process a single target to calculate its metric values and info.
-
-    Args:
-        sim: Microsimulation instance
-        target: pandas Series with target data
-        constraints_df: DataFrame with constraint data
-
-    Returns:
-        Tuple of (metric_values, target_info_dict)
-    """
-    # Create stratum mask
-    stratum_mask = create_constraint_mask(sim, constraints_df)
-
-    # Calculate the variable at household level
-    values = calculate_variable_at_household_level(sim, target["variable"])
-
-    # Apply stratum mask (zero out values outside the stratum)
-    metric_values = values * stratum_mask
-
-    # Build target info dictionary
-    target_info = {
-        "name": build_target_name(target["variable"], constraints_df),
-        "active": bool(target["active"]),
-        "tolerance": (
-            target["tolerance"] if pd.notna(target["tolerance"]) else None
-        ),
-    }
-
-    return metric_values, target_info
 
 
 def create_metrics_matrix(
@@ -513,18 +477,16 @@ def create_metrics_matrix(
         try:
             # Fetch constraints for this target's stratum
             constraints_df = fetch_stratum_constraints(
-                engine, target["stratum_id"]
+                engine, int(target["stratum_id"])
             )
 
             # Process the target
-            metric_values, info_dict = process_single_target(
-                sim,
-                target,
-                constraints_df,
+            household_values, info_dict = process_single_target(
+                sim, target, constraints_df
             )
 
             # Store results
-            metrics_list.append(metric_values)
+            metrics_list.append(household_values)
             target_ids.append(target_id)
             target_values.append(target["value"])
             target_info[target_id] = info_dict
@@ -569,6 +531,7 @@ def validate_metrics_matrix(
     target_values: np.ndarray,
     weights: Optional[np.ndarray] = None,
     target_info: Optional[Dict[int, Dict[str, any]]] = None,
+    raise_error: Optional[bool] = False,
 ) -> pd.DataFrame:
     """
     Validate the metrics matrix by checking estimates vs targets.
@@ -578,6 +541,7 @@ def validate_metrics_matrix(
         target_values: Array of target values
         weights: Optional weights array (defaults to uniform weights)
         target_info: Optional target info dictionary
+        raise_error: Whether to raise an error for invalid estimates
 
     Returns:
         DataFrame with validation results
@@ -586,6 +550,17 @@ def validate_metrics_matrix(
         weights = np.ones(len(metrics_matrix)) / len(metrics_matrix)
 
     estimates = weights @ metrics_matrix.values
+
+    if raise_error:
+        for _, record in metrics_matrix.iterrows():
+            if record.sum() == 0:
+                raise ValueError(
+                    f"Record {record.name} has all zero estimates. None of the target constraints were met by this household and its individuals."
+                )
+        if not np.all(estimates != 0):
+            raise ValueError(
+                f"{(estimates == 0).sum()} estimate(s) contain zero values"
+            )
 
     validation_data = {
         "target_id": metrics_matrix.columns,

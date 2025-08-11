@@ -24,6 +24,9 @@ from policyengine_data.calibration.target_rescaling import (
 
 logger = logging.getLogger(__name__)
 
+areas_in_national_level = {
+    "United States": "0100000US",
+}
 
 areas_in_state_level = {
     "Alabama": "0400000US01",
@@ -31,6 +34,52 @@ areas_in_state_level = {
     "Arizona": "0400000US04",
     "Arkansas": "0400000US05",
     "California": "0400000US06",
+    "Colorado": "0400000US08",
+    "Connecticut": "0400000US09",
+    "Delaware": "0400000US10",
+    "District of Columbia": "0400000US11",
+    "Florida": "0400000US12",
+    "Georgia": "0400000US13",
+    "Hawaii": "0400000US15",
+    "Idaho": "0400000US16",
+    "Illinois": "0400000US17",
+    "Indiana": "0400000US18",
+    "Iowa": "0400000US19",
+    "Kansas": "0400000US20",
+    "Kentucky": "0400000US21",
+    "Louisiana": "0400000US22",
+    "Maine": "0400000US23",
+    "Maryland": "0400000US24",
+    "Massachusetts": "0400000US25",
+    "Michigan": "0400000US26",
+    "Minnesota": "0400000US27",
+    "Mississippi": "0400000US28",
+    "Missouri": "0400000US29",
+    "Montana": "0400000US30",
+    "Nebraska": "0400000US31",
+    "Nevada": "0400000US32",
+    "New Hampshire": "0400000US33",
+    "New Jersey": "0400000US34",
+    "New Mexico": "0400000US35",
+    "New York": "0400000US36",
+    "North Carolina": "0400000US37",
+    "North Dakota": "0400000US38",
+    "Ohio": "0400000US39",
+    "Oklahoma": "0400000US40",
+    "Oregon": "0400000US41",
+    "Pennsylvania": "0400000US42",
+    "Rhode Island": "0400000US44",
+    "South Carolina": "0400000US45",
+    "South Dakota": "0400000US46",
+    "Tennessee": "0400000US47",
+    "Texas": "0400000US48",
+    "Utah": "0400000US49",
+    "Vermont": "0400000US50",
+    "Virginia": "0400000US51",
+    "Washington": "0400000US53",
+    "West Virginia": "0400000US54",
+    "Wisconsin": "0400000US55",
+    "Wyoming": "0400000US56",
 }
 
 
@@ -73,30 +122,7 @@ def calibrate_geography_level(
     for area, geo_identifier in calibration_areas.items():
         logger.info(f"Calibrating dataset for {area}...")
 
-        # Create metrics matrix for the area based on strata constraints
-        metrics_matrix, targets, target_info = create_metrics_matrix(
-            db_uri=db_uri,
-            time_period=year,
-            dataset=dataset,
-            stratum_filter_variable=geo_db_filter_variable,
-            stratum_filter_value=geo_identifier,
-            stratum_filter_operation="in",
-        )
-        metrics_evaluation = validate_metrics_matrix(
-            metrics_matrix,
-            targets,
-            target_info=target_info,
-        )
-        # metrics_evaluation.to_csv(f"{area}_metrics_evaluation.csv")
-
-        target_names = []
-        excluded_targets = []
-        for target_id, info in target_info.items():
-            target_names.append(info["name"])
-            if not info["active"]:
-                excluded_targets.append(target_id)
-        target_names = np.array(target_names)
-
+        # Load dataset configured for the specific geography first
         from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
             UCGID,
         )
@@ -109,12 +135,32 @@ def calibrate_geography_level(
                 geo_identifier
             ),  # will need a non-hardcoded solution to assign geography_identifier in the future
         )
-        weights = sim_data_to_calibrate.calculate("household_weight").values
 
-        print(
-            "younger than 15:",
-            (sim_data_to_calibrate.calculate("age") < 15).sum(),
+        # Create metrics matrix for the area based on strata constraints using configured simulation
+        metrics_matrix, targets, target_info = create_metrics_matrix(
+            db_uri=db_uri,
+            time_period=year,
+            sim=sim_data_to_calibrate,
+            stratum_filter_variable=geo_db_filter_variable,
+            stratum_filter_value=geo_identifier,
+            stratum_filter_operation="in",
         )
+        metrics_evaluation = validate_metrics_matrix(
+            metrics_matrix,
+            targets,
+            target_info=target_info,
+            raise_error=True,
+        )
+
+        target_names = []
+        excluded_targets = []
+        for target_id, info in target_info.items():
+            target_names.append(info["name"])
+            if not info["active"]:
+                excluded_targets.append(target_id)
+        target_names = np.array(target_names)
+
+        weights = np.ones(len(metrics_matrix))
 
         # Calibrate with L0 regularization
         from microcalibrate import Calibration
@@ -124,15 +170,16 @@ def calibrate_geography_level(
             targets=targets,
             target_names=target_names,
             estimate_matrix=metrics_matrix,
-            epochs=300,
+            epochs=600,
             learning_rate=0.2,
             excluded_targets=(
                 excluded_targets if len(excluded_targets) > 0 else None
             ),
+            sparse_learning_rate=0.1,
             regularize_with_l0=True,
+            csv_path=f"{area}_calibration.csv",
         )
         performance_log = calibrator.calibrate()
-        performance_log.to_csv(f"{area}_calibration_log.csv")
         optimized_sparse_weights = calibrator.sparse_weights
 
         # Minimize the calibrated dataset storing only records with non-zero weights

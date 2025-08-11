@@ -42,6 +42,9 @@ def load_dataset_for_geography_legacy(
     geo_values = [geography_identifier] * hhs
     sim.set_input(geography_variable, year, geo_values)
 
+    ucgid_values = sim.calculate(geography_variable).values
+    assert all(val == geography_identifier.name for val in ucgid_values)
+
     return sim
 
 
