@@ -21,6 +21,9 @@ from policyengine_data.calibration.target_rescaling import (
     download_database,
     rescale_calibration_targets,
 )
+from policyengine_data.tools.legacy_class_conversions import (
+    SingleYearDataset_to_Dataset,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -86,10 +89,14 @@ areas_in_state_level = {
 def calibrate_geography_level(
     calibration_areas: Dict[str, str],
     dataset: str,
-    geo_db_filter_variable: str = "ucgid_str",
-    geo_sim_filter_variable: str = "ucgid",
+    stack_datasets: Optional[bool] = True,
+    geo_db_filter_variable: Optional[str] = "ucgid_str",
+    geo_sim_filter_variable: Optional[str] = "ucgid",
     year: Optional[int] = 2023,
     db_uri: Optional[str] = None,
+    noise_level: Optional[float] = 10.0,
+    use_dataset_weights: Optional[bool] = True,
+    regularize_with_l0: Optional[bool] = False,
 ):
     """
     This function will calibrate the dataset for a specific geography level.
@@ -105,10 +112,14 @@ def calibrate_geography_level(
     Args:
         calibration_areas (Dict[str, str]): A dictionary mapping area names to their corresponding geography level.
         dataset (str): The name of the dataset to be calibrated.
+        stack_datasets (Optional[bool]): Whether to assign the dataset to each area in the geography level and combine them. Default: True.
         year (Optional[int]): The year for which the calibration is being performed. Default: 2023.
         geo_db_filter_variable (str): The variable used to filter the database by geography. Default in the US: "ucgid_str".
         geo_sim_filter_variable (str): The variable used to filter the simulation by geography. Default in the US: "ucgid".
         db_uri (Optional[str]): The URI of the database to use for rescaling targets. If None, it will download the database from the default URI.
+        noise_level (Optional[float]): The level of noise to apply during calibration. Default: 10.0.
+        use_dataset_weights (Optional[bool]): Whether to use original dataset weights as the starting weights for calibration. Default: True.
+        regularize_with_l0 (Optional[bool]): Whether to use L0 regularization during calibration. Default: False.
     """
     if db_uri is None:
         db_uri = download_database()
@@ -122,19 +133,26 @@ def calibrate_geography_level(
     for area, geo_identifier in calibration_areas.items():
         logger.info(f"Calibrating dataset for {area}...")
 
-        # Load dataset configured for the specific geography first
-        from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
-            UCGID,
-        )
+        if stack_datasets:
+            # Load dataset configured for the specific geography first
+            from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
+                UCGID,
+            )
 
-        sim_data_to_calibrate = load_dataset_for_geography_legacy(
-            year=year,
-            dataset=dataset,
-            geography_variable=geo_sim_filter_variable,
-            geography_identifier=UCGID(
-                geo_identifier
-            ),  # will need a non-hardcoded solution to assign geography_identifier in the future
-        )
+            sim_data_to_calibrate = load_dataset_for_geography_legacy(
+                year=year,
+                dataset=dataset,
+                geography_variable=geo_sim_filter_variable,
+                geography_identifier=UCGID(
+                    geo_identifier
+                ),  # will need a non-hardcoded solution to assign geography_identifier in the future
+            )
+        else:
+            from policyengine_us import Microsimulation
+
+            sim_data_to_calibrate = Microsimulation(dataset=dataset)
+            sim_data_to_calibrate.default_input_period = year
+            sim_data_to_calibrate.build_from_dataset()
 
         # Create metrics matrix for the area based on strata constraints using configured simulation
         metrics_matrix, targets, target_info = create_metrics_matrix(
@@ -160,7 +178,12 @@ def calibrate_geography_level(
                 excluded_targets.append(target_id)
         target_names = np.array(target_names)
 
-        weights = np.ones(len(metrics_matrix))
+        if use_dataset_weights:
+            weights = sim_data_to_calibrate.calculate(
+                "household_weight"
+            ).values
+        else:
+            weights = np.ones(len(metrics_matrix))
 
         # Calibrate with L0 regularization
         from microcalibrate import Calibration
@@ -172,21 +195,27 @@ def calibrate_geography_level(
             estimate_matrix=metrics_matrix,
             epochs=600,
             learning_rate=0.2,
+            noise_level=noise_level,
             excluded_targets=(
                 excluded_targets if len(excluded_targets) > 0 else None
             ),
             sparse_learning_rate=0.1,
-            regularize_with_l0=True,
+            regularize_with_l0=regularize_with_l0,
             csv_path=f"{area}_calibration.csv",
         )
         performance_log = calibrator.calibrate()
         optimized_sparse_weights = calibrator.sparse_weights
+        optimized_weights = calibrator.weights
 
         # Minimize the calibrated dataset storing only records with non-zero weights
         single_year_calibrated_dataset = minimize_calibrated_dataset_legacy(
             sim=sim_data_to_calibrate,
             year=year,
-            optimized_sparse_weights=optimized_sparse_weights,
+            optimized_weights=(
+                optimized_sparse_weights
+                if regularize_with_l0
+                else optimized_weights
+            ),
         )
 
         # Detect ids that require resetting after minimization
@@ -230,6 +259,7 @@ def calibrate_geography_level(
                     geography_level_calibrated_dataset.entities[entity][
                         f"{entity}_id"
                     ].max()
+                    + 1
                 )
 
             single_year_calibrated_dataset.entities = normalise_table_keys(
@@ -258,11 +288,39 @@ if __name__ == "__main__":
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
         db_uri="sqlite:///policy_data.db",
+        use_dataset_weights=False,
+        regularize_with_l0=True,
+    )
+
+    Dataset_state_level = SingleYearDataset_to_Dataset(
+        state_level_calibrated_dataset, output_path="Dataset_state_level.h5"
     )
 
     print("Completed calibration for state level dataset.")
 
     print(
-        "Number of household records:",
+        "Number of household records at the state level:",
         len(state_level_calibrated_dataset.entities["household"]),
+    )
+
+    national_level_calibrated_dataset = calibrate_geography_level(
+        areas_in_national_level,
+        dataset="Dataset_state_level.h5",
+        stack_datasets=False,
+        db_uri="sqlite:///policy_data.db",
+        noise_level=0.0,
+        use_dataset_weights=True,
+        regularize_with_l0=False,
+    )
+
+    Dataset_national_level = SingleYearDataset_to_Dataset(
+        national_level_calibrated_dataset,
+        output_path="Dataset_national_level.h5",
+    )
+
+    print("Completed calibration for national level dataset.")
+
+    print(
+        "Number of household records at the national level:",
+        len(national_level_calibrated_dataset.entities["household"]),
     )

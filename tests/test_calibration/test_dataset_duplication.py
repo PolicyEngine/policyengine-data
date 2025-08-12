@@ -69,7 +69,7 @@ def test_dataset_minimization() -> None:
 
     # Minimize the dataset
     after_minimizing = minimize_calibrated_dataset_legacy(
-        sim, year=2023, optimized_sparse_weights=optimized_sparse_weights
+        sim, year=2023, optimized_weights=optimized_sparse_weights
     )
 
     assert len(before_minimizing.entities["household"]) > len(

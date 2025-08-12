@@ -49,7 +49,7 @@ def load_dataset_for_geography_legacy(
 
 
 def minimize_calibrated_dataset_legacy(
-    sim: Microsimulation, year: int, optimized_sparse_weights: pd.Series
+    sim: Microsimulation, year: int, optimized_weights: pd.Series
 ) -> "SingleYearDataset":
     """
     Use sparse weights to minimize the calibrated dataset storing in the legacy Dataset class.
@@ -57,17 +57,45 @@ def minimize_calibrated_dataset_legacy(
     Args:
         sim (Microsimulation): The Microsimulation object with the dataset to minimize.
         year (int): Year the dataset is representing.
-        optimized_sparse_weights (pd.Series): The calibrated, regularized weights used to minimize the dataset.
+        optimized_weights (pd.Series): The calibrated, regularized weights used to minimize the dataset.
 
     Returns:
         SingleYearDataset: The regularized dataset
     """
-    sim.set_input("household_weight", year, optimized_sparse_weights)
+    sim.set_input("household_weight", year, optimized_weights)
 
     df = sim.to_input_dataframe()  # Not at household level
 
+    # NOTE (juaristi22): Somewhere in converting from Dataset to SingleYearDataset and back to Dataset the year is reset to policyengine-us' default year (2024) and I can't seem to figure out where
+    # Dynamic year detection fallback - check what year suffix actually exists in the dataframe
+    detected_year = None
     household_weight_column = f"household_weight__{year}"
     df_household_id_column = f"household_id__{year}"
+
+    # If the expected columns don't exist, detect the actual year from column names
+    if (
+        household_weight_column not in df.columns
+        or df_household_id_column not in df.columns
+    ):
+        print(
+            f"Warning: Expected columns with year {year} not found in dataframe"
+        )
+        print(f"Available columns: {list(df.columns)[:10]}")
+
+        # Look for household_weight and household_id columns with any year suffix
+        for col in df.columns:
+            if col.startswith("household_weight__"):
+                detected_year = col.split("__")[1].split("-")[0]
+                break
+
+        if detected_year:
+            print(f"Detected actual year in dataframe: {detected_year}")
+            household_weight_column = f"household_weight__{detected_year}"
+            df_household_id_column = f"household_id__{detected_year}"
+        else:
+            raise KeyError(
+                f"Could not find household_weight or household_id columns with any year suffix"
+            )
 
     # Group by household ID and get the first entry for each group
     h_df = df.groupby(df_household_id_column).first()
