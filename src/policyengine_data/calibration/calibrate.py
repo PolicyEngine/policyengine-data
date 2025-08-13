@@ -292,6 +292,10 @@ if __name__ == "__main__":
         regularize_with_l0=True,
     )
 
+    state_level_weights = state_level_calibrated_dataset.entities["household"][
+        "household_weight"
+    ].values
+
     Dataset_state_level = SingleYearDataset_to_Dataset(
         state_level_calibrated_dataset, output_path="Dataset_state_level.h5"
     )
@@ -313,6 +317,10 @@ if __name__ == "__main__":
         regularize_with_l0=False,
     )
 
+    national_level_weights = national_level_calibrated_dataset.entities[
+        "household"
+    ]["household_weight"].values
+
     Dataset_national_level = SingleYearDataset_to_Dataset(
         national_level_calibrated_dataset,
         output_path="Dataset_national_level.h5",
@@ -323,4 +331,12 @@ if __name__ == "__main__":
     print(
         "Number of household records at the national level:",
         len(national_level_calibrated_dataset.entities["household"]),
+    )
+
+    print("Weights comparison:")
+    print(
+        f"Weights from state level calibration - mean: {state_level_weights.mean()}; range: [{state_level_weights.min()}, {state_level_weights.max()}]"
+    )
+    print(
+        f"Weights from national level calibration - mean: {national_level_weights.mean()}; range: [{national_level_weights.min()}, {national_level_weights.max()}]"
     )
