@@ -1,5 +1,5 @@
 """
-This file will contain the logic for calibrating policy engine data from start to end. It will include functions for target rescaling, matrix creation, household duplication and assignment to new geographic areas, and final calibration.
+This file will contain the logic for calibrating policy engine data from start to end. It will include different calibration routine options, from calibration at one geographic level to full calibration across all levels.
 """
 
 import logging
@@ -8,7 +8,7 @@ from typing import Dict, Optional
 import numpy as np
 import pandas as pd
 
-from policyengine_data import normalise_table_keys
+from policyengine_data import SingleYearDataset, normalise_table_keys
 from policyengine_data.calibration.dataset_duplication import (
     load_dataset_for_geography_legacy,
     minimize_calibrated_dataset_legacy,
@@ -86,10 +86,11 @@ areas_in_state_level = {
 }
 
 
-def calibrate_geography_level(
+def calibrate_single_geography_level(
     calibration_areas: Dict[str, str],
     dataset: str,
     stack_datasets: Optional[bool] = True,
+    dataset_subsample_size: Optional[int] = None,
     geo_db_filter_variable: Optional[str] = "ucgid_str",
     geo_sim_filter_variable: Optional[str] = "ucgid",
     year: Optional[int] = 2023,
@@ -99,12 +100,12 @@ def calibrate_geography_level(
     regularize_with_l0: Optional[bool] = False,
 ):
     """
-    This function will calibrate the dataset for a specific geography level.
+    This function will calibrate the dataset for a specific geography level, defaulting to stacking the base dataset per area within it.
     It will handle conversion between dataset classes to enable:
         1. Rescaling calibration targets.
-        2. Selecting the appropriate targets that match each area at the geography level.
-        3. Creating a metrics matrix that enables computing estimates for those targets.
-        4. Loading the dataset and reassigning it to the specified geography.
+        2. Loading the base dataset and reassigning it to the specified geography.
+        3. Selecting the appropriate targets that match each area at the geography level.
+        4. Creating a metrics matrix that enables computing estimates for those targets.
         5. Calibrating the dataset's household weights with regularization.
         6. Filtering the resulting dataset to only include households with non-zero weights.
         7. Stacking all areas at that level into a single dataset.
@@ -113,6 +114,7 @@ def calibrate_geography_level(
         calibration_areas (Dict[str, str]): A dictionary mapping area names to their corresponding geography level.
         dataset (str): The name of the dataset to be calibrated.
         stack_datasets (Optional[bool]): Whether to assign the dataset to each area in the geography level and combine them. Default: True.
+        dataset_subsample_size (Optional[int]): The size of the base dataset subsample to use for calibration. If None, the full dataset will be used for stacking when enabled.
         year (Optional[int]): The year for which the calibration is being performed. Default: 2023.
         geo_db_filter_variable (str): The variable used to filter the database by geography. Default in the US: "ucgid_str".
         geo_sim_filter_variable (str): The variable used to filter the simulation by geography. Default in the US: "ucgid".
@@ -120,6 +122,9 @@ def calibrate_geography_level(
         noise_level (Optional[float]): The level of noise to apply during calibration. Default: 10.0.
         use_dataset_weights (Optional[bool]): Whether to use original dataset weights as the starting weights for calibration. Default: True.
         regularize_with_l0 (Optional[bool]): Whether to use L0 regularization during calibration. Default: False.
+
+    Returns:
+        geography_level_calibrated_dataset (SingleYearDataset): The calibrated dataset for the specified geography level.
     """
     if db_uri is None:
         db_uri = download_database()
@@ -142,6 +147,7 @@ def calibrate_geography_level(
             sim_data_to_calibrate = load_dataset_for_geography_legacy(
                 year=year,
                 dataset=dataset,
+                dataset_subsample_size=dataset_subsample_size,
                 geography_variable=geo_sim_filter_variable,
                 geography_identifier=UCGID(
                     geo_identifier
@@ -283,8 +289,206 @@ def calibrate_geography_level(
     return geography_level_calibrated_dataset
 
 
+def calibrate_all_levels(
+    database_stacking_areas: Dict[str, str],
+    dataset: str,
+    dataset_subsample_size: Optional[int] = None,
+    geo_sim_filter_variable: Optional[str] = "ucgid",
+    year: Optional[int] = 2023,
+    db_uri: Optional[str] = None,
+    noise_level: Optional[float] = 10.0,
+    regularize_with_l0: Optional[bool] = False,
+):
+    """
+    This function will calibrate the dataset for all geography levels in the database, defaulting to stacking the base dataset per area within the specified level (it is recommended to use the lowest in the hierarchy for stacking). (Eg. when calibrating for district, state and national levels in the US, this function will stack the CPS dataset for each district and calibrate the stacked dataset for the three levels' targets.)
+    It will handle conversion between dataset classes to enable:
+        1. Rescaling calibration targets.
+        2. Loading the base dataset and reassigning it to the geographic areas within the lowest level.
+        3. Stacking all areas at that level into a single dataset.
+        4. Selecting all targets that match the specified geography levels.
+        5. Creating a metrics matrix that enables computing estimates for those targets.
+        6. Calibrating the dataset's household weights with regularization.
+        7. Filtering the resulting dataset to only include households with non-zero weights.
+
+    Args:
+        database_stacking_areas (Dict[str, str]): A dictionary mapping area names to their identifiers for base dataset stacking.
+        dataset (str): Path to the base dataset to stack.
+        dataset_subsample_size (Optional[int]): The size of the subsample to use for calibration.
+        geo_sim_filter_variable (Optional[str]): The variable to use for geographic similarity filtering. Default in the US: "ucgid".
+        year (Optional[int]): The year to use for calibration. Default: 2023.
+        db_uri (Optional[str]): The database URI to use for calibration. If None, it will download the database from the default URI.
+        noise_level (Optional[float]): The noise level to use for calibration. Default: 10.0.
+        regularize_with_l0 (Optional[bool]): Whether to use L0 regularization for calibration. Default: False.
+
+    Returns:
+        fully_calibrated_dataset (SingleYearDataset): The calibrated dataset for all geography levels.
+    """
+    if db_uri is None:
+        db_uri = download_database()
+
+    # Rescale targets for consistency across geography areas
+    rescaling_results = rescale_calibration_targets(
+        db_uri=db_uri, update_database=True
+    )
+
+    stacked_dataset = None
+    for area, geo_identifier in database_stacking_areas.items():
+        logger.info(f"Stacking dataset for {area}...")
+
+        # Load dataset configured for the specific geographic area
+        from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
+            UCGID,
+        )
+
+        sim_data_to_stack = load_dataset_for_geography_legacy(
+            year=year,
+            dataset=dataset,
+            dataset_subsample_size=dataset_subsample_size,
+            geography_variable=geo_sim_filter_variable,
+            geography_identifier=UCGID(
+                geo_identifier
+            ),  # will need a non-hardcoded solution to assign geography_identifier in the future
+        )
+
+        single_year_dataset = SingleYearDataset.from_simulation(
+            sim_data=sim_data_to_stack,
+            year=year,
+        )
+
+        # Detect ids that require resetting
+        primary_id_variables = {}
+        for entity in single_year_dataset.entities:
+            primary_id_variables[entity] = f"{entity}_id"
+
+        foreign_id_variables = {}
+        for entity in single_year_dataset.entities:
+            entity_foreign_keys = {}
+            for target_entity in single_year_dataset.entities:
+                if entity != target_entity:
+                    foreign_key_name = f"{entity}_{target_entity}_id"
+                    if (
+                        foreign_key_name
+                        in sim_data_to_stack.tax_benefit_system.variables
+                    ) and (
+                        foreign_key_name
+                        in single_year_dataset.entities[entity].columns
+                    ):
+                        entity_foreign_keys[foreign_key_name] = target_entity
+
+            if entity_foreign_keys:
+                foreign_id_variables[entity] = entity_foreign_keys
+
+        # Combine datasets
+        if stacked_dataset is None:
+            stacked_dataset = single_year_dataset
+            single_year_dataset.entities = normalise_table_keys(
+                single_year_dataset.entities,
+                primary_keys=primary_id_variables,
+                foreign_keys=foreign_id_variables,
+                start_index=None,
+            )
+        else:
+            previous_max_ids = {}
+            for entity in single_year_dataset.entities:
+                previous_max_ids[entity] = (
+                    stacked_dataset.entities[entity][f"{entity}_id"].max() + 1
+                )
+
+            single_year_dataset.entities = normalise_table_keys(
+                single_year_dataset.entities,
+                primary_keys=primary_id_variables,
+                foreign_keys=foreign_id_variables,
+                start_index=previous_max_ids,
+            )
+
+            stacked_dataset.entities = {
+                entity: pd.concat(
+                    [
+                        stacked_dataset.entities[entity],
+                        single_year_dataset.entities[entity],
+                    ],
+                    ignore_index=True,
+                )
+                for entity in stacked_dataset.entities.keys()
+            }
+
+    SingleYearDataset_to_Dataset(
+        stacked_dataset,
+        output_path="Dataset_stacked.h5",
+    )
+
+    logger.info(
+        "Stacked dataset created successfully, starting to process it for calibration..."
+    )
+
+    metrics_matrix, targets, target_info = create_metrics_matrix(
+        db_uri=db_uri,
+        time_period=year,
+        dataset="Dataset_stacked.h5",
+        reform_id=0,
+    )
+
+    metrics_evaluation = validate_metrics_matrix(
+        metrics_matrix,
+        targets,
+        target_info=target_info,
+        raise_error=True,
+    )
+
+    target_names = []
+    excluded_targets = []
+    for target_id, info in target_info.items():
+        target_names.append(info["name"])
+        if not info["active"]:
+            excluded_targets.append(target_id)
+    target_names = np.array(target_names)
+
+    weights = np.ones(len(metrics_matrix))
+
+    # Calibrate with L0 regularization
+    from microcalibrate import Calibration
+
+    calibrator = Calibration(
+        weights=weights,
+        targets=targets,
+        target_names=target_names,
+        estimate_matrix=metrics_matrix,
+        epochs=600,
+        learning_rate=0.2,
+        noise_level=noise_level,
+        excluded_targets=(
+            excluded_targets if len(excluded_targets) > 0 else None
+        ),
+        sparse_learning_rate=0.1,
+        regularize_with_l0=regularize_with_l0,
+        csv_path=f"full_calibration.csv",
+    )
+    performance_log = calibrator.calibrate()
+    optimized_sparse_weights = calibrator.sparse_weights
+    optimized_weights = calibrator.weights
+
+    from policyengine_us import Microsimulation
+
+    sim_stacked_dataset = Microsimulation(dataset="Dataset_stacked.h5")
+    sim_stacked_dataset.default_input_period = year
+    sim_stacked_dataset.build_from_dataset()
+
+    # Minimize the calibrated dataset storing only records with non-zero weights
+    fully_calibrated_dataset = minimize_calibrated_dataset_legacy(
+        sim=sim_stacked_dataset,
+        year=year,
+        optimized_weights=(
+            optimized_sparse_weights
+            if regularize_with_l0
+            else optimized_weights
+        ),
+    )
+
+    return fully_calibrated_dataset
+
+
 if __name__ == "__main__":
-    state_level_calibrated_dataset = calibrate_geography_level(
+    state_level_calibrated_dataset = calibrate_single_geography_level(
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
         db_uri="sqlite:///policy_data.db",
@@ -296,7 +500,7 @@ if __name__ == "__main__":
         "household_weight"
     ].values
 
-    Dataset_state_level = SingleYearDataset_to_Dataset(
+    SingleYearDataset_to_Dataset(
         state_level_calibrated_dataset, output_path="Dataset_state_level.h5"
     )
 
@@ -307,7 +511,7 @@ if __name__ == "__main__":
         len(state_level_calibrated_dataset.entities["household"]),
     )
 
-    national_level_calibrated_dataset = calibrate_geography_level(
+    national_level_calibrated_dataset = calibrate_single_geography_level(
         areas_in_national_level,
         dataset="Dataset_state_level.h5",
         stack_datasets=False,
@@ -321,7 +525,7 @@ if __name__ == "__main__":
         "household"
     ]["household_weight"].values
 
-    Dataset_national_level = SingleYearDataset_to_Dataset(
+    SingleYearDataset_to_Dataset(
         national_level_calibrated_dataset,
         output_path="Dataset_national_level.h5",
     )

@@ -105,3 +105,43 @@ def test_dataset_minimization() -> None:
     assert pd.Series(age_before_kept).equals(
         pd.Series(age_after)
     ), "Age values should not change for records that were kept"
+
+
+def test_dataset_subsampling() -> None:
+    """Test that dataset subsampling works correctly."""
+    from policyengine_data.calibration import load_dataset_for_geography_legacy
+
+    # Load full dataset first
+    sim_full = load_dataset_for_geography_legacy()
+    full_households = len(sim_full.calculate("household_id").unique())
+
+    # Test subsampling with a smaller size
+    subsample_size = min(
+        100, full_households // 2
+    )  # Ensure we're actually reducing the size
+    sim_subsampled = load_dataset_for_geography_legacy(
+        dataset_subsample_size=subsample_size
+    )
+
+    subsampled_households = len(
+        sim_subsampled.calculate("household_id").unique()
+    )
+
+    # Verify the subsampled dataset has the expected number of households
+    assert (
+        subsampled_households == subsample_size
+    ), f"Expected {subsample_size} households, got {subsampled_households}"
+
+    # Verify geography is still set correctly after subsampling
+    expected_ucgid = UCGID("0100000US")
+    ucgid_values = sim_subsampled.calculate("ucgid").values
+    assert all(val == expected_ucgid.name for val in ucgid_values)
+
+    # Test with a subsample size larger than available households (should return original)
+    sim_large_subsample = load_dataset_for_geography_legacy(
+        dataset_subsample_size=full_households + 1000
+    )
+    large_subsample_households = len(
+        sim_large_subsample.calculate("household_id").unique()
+    )
+    assert large_subsample_households == full_households

@@ -1,5 +1,6 @@
 from typing import Any, Optional
 
+import numpy as np
 import pandas as pd
 from policyengine_us import Microsimulation
 from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
@@ -17,6 +18,7 @@ Functions using the legacy Dataset class to operate datasets given their depende
 def load_dataset_for_geography_legacy(
     year: Optional[int] = 2023,
     dataset: Optional[str] = None,
+    dataset_subsample_size: Optional[int] = None,
     geography_variable: Optional[str] = "ucgid",
     geography_identifier: Optional[Any] = UCGID("0100000US"),
 ) -> "Microsimulation":
@@ -26,6 +28,7 @@ def load_dataset_for_geography_legacy(
     Args:
         year (Optional[int]): The year for which to calibrate the dataset.
         dataset (Optional[None]): The dataset to load. If None, defaults to the CPS dataset for the specified year.
+        dataset_subsample_size (Optional[int]): The size of the base dataset subsample to use for calibration. If None, the full dataset will be used for stacking.
         geography_variable (Optional[str]): The variable representing the geography in the dataset.
         geography_identifier (Optional[str]): The identifier for the geography to calibrate.
 
@@ -44,6 +47,49 @@ def load_dataset_for_geography_legacy(
 
     ucgid_values = sim.calculate(geography_variable).values
     assert all(val == geography_identifier.name for val in ucgid_values)
+
+    if dataset_subsample_size is not None:
+        df = sim.to_input_dataframe()
+
+        # Find the household ID column (it should be named with the year)
+        household_id_column = None
+        for col in df.columns:
+            if col.startswith("household_id__"):
+                household_id_column = col
+                break
+
+        if household_id_column is None:
+            raise KeyError(
+                "Could not find household_id column in simulation dataframe"
+            )
+
+        # Get unique household IDs
+        unique_household_ids = df[household_id_column].unique()
+
+        # Subsample households if we have more than requested
+        if len(unique_household_ids) > dataset_subsample_size:
+            np.random.seed(42)  # For reproducible results
+            subsampled_household_ids = np.random.choice(
+                unique_household_ids,
+                size=dataset_subsample_size,
+                replace=False,
+            )
+
+            # Filter dataframe to only include subsampled households
+            subset_df = df[
+                df[household_id_column].isin(subsampled_household_ids)
+            ].copy()
+
+            # Create new simulation from subsampled data
+            sim = Microsimulation()
+            sim.dataset = Dataset.from_dataframe(subset_df, year)
+            sim.default_input_period = year
+            sim.build_from_dataset()
+
+            # Reapply geography settings to subsampled data
+            subsampled_hhs = len(sim.calculate("household_id").values)
+            geo_values = [geography_identifier] * subsampled_hhs
+            sim.set_input(geography_variable, year, geo_values)
 
     return sim
 
