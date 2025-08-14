@@ -67,6 +67,9 @@ def test_dataset_minimization() -> None:
         + [0.0] * (len(household_ids) - (len(household_ids) // 2))
     )
 
+    # Get age values before minimization for comparison
+    age_before = sim.calculate("age", 2023).values
+
     # Minimize the dataset
     after_minimizing = minimize_calibrated_dataset_legacy(
         sim, year=2023, optimized_weights=optimized_sparse_weights
@@ -82,3 +85,23 @@ def test_dataset_minimization() -> None:
         )
         < 2
     )
+
+    # Check that age values did not change for the records that were kept
+    age_after = after_minimizing.entities["person"]["age"].values
+    kept_person_ids = after_minimizing.entities["person"]["person_id"].values
+
+    # Find the indices of these person IDs in the original dataset
+    original_person_ids = before_minimizing.entities["person"][
+        "person_id"
+    ].values
+    kept_indices = [
+        i
+        for i, pid in enumerate(original_person_ids)
+        if pid in kept_person_ids
+    ]
+
+    # Compare age values for kept records
+    age_before_kept = age_before[kept_indices]
+    assert pd.Series(age_before_kept).equals(
+        pd.Series(age_after)
+    ), "Age values should not change for records that were kept"
