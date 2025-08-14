@@ -161,6 +161,10 @@ def parse_constraint_value(value: str, operation: str):
         # Parse as list
         return [v.strip() for v in value.split(",")]
 
+    # Try to convert to boolean
+    if value.lower() in ("true", "false"):
+        return value.lower() == "true"
+
     # Try to convert to numeric
     try:
         num_value = float(value)
@@ -558,8 +562,10 @@ def validate_metrics_matrix(
                     f"Record {record.name} has all zero estimates. None of the target constraints were met by this household and its individuals."
                 )
         if not np.all(estimates != 0):
+            zero_indices = np.where(estimates == 0)[0]
+            zero_targets = [metrics_matrix.columns[i] for i in zero_indices]
             raise ValueError(
-                f"{(estimates == 0).sum()} estimate(s) contain zero values"
+                f"{(estimates == 0).sum()} estimate(s) contain zero values for targets: {zero_targets}"
             )
 
     validation_data = {
