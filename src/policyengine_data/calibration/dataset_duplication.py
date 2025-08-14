@@ -41,12 +41,6 @@ def load_dataset_for_geography_legacy(
     sim = Microsimulation(dataset=dataset)
     sim.default_input_period = year
     sim.build_from_dataset()
-    hhs = len(sim.calculate("household_id").values)
-    geo_values = [geography_identifier] * hhs
-    sim.set_input(geography_variable, year, geo_values)
-
-    ucgid_values = sim.calculate(geography_variable).values
-    assert all(val == geography_identifier.name for val in ucgid_values)
 
     if dataset_subsample_size is not None:
         df = sim.to_input_dataframe()
@@ -86,10 +80,12 @@ def load_dataset_for_geography_legacy(
             sim.default_input_period = year
             sim.build_from_dataset()
 
-            # Reapply geography settings to subsampled data
-            subsampled_hhs = len(sim.calculate("household_id").values)
-            geo_values = [geography_identifier] * subsampled_hhs
-            sim.set_input(geography_variable, year, geo_values)
+    hhs = len(sim.calculate("household_id").values)
+    geo_values = [geography_identifier] * hhs
+    sim.set_input(geography_variable, year, geo_values)
+
+    ucgid_values = sim.calculate(geography_variable).values
+    assert all(val == geography_identifier.name for val in ucgid_values)
 
     return sim
 

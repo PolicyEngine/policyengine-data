@@ -3,4 +3,5 @@
     added:
     - Logic to create estimate matrix for calibration from a database.
     - Conversion functions between dataset classes to enable stacking datasets.
-    - calibrate_geography_level function to create a dataset for a specific geography level, calibrated to each of its areas.
+    - Logic to calibrate for multiple geographic levels with two different routines.
+    - Calibration documentation.

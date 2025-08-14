@@ -450,6 +450,7 @@ def create_metrics_matrix(
             raise ValueError("Either 'sim' or 'dataset' must be provided")
         sim = Microsimulation(dataset=dataset)
         sim.default_calculation_period = time_period
+        sim.build_from_dataset()
 
     # Get household IDs for matrix index
     household_ids = sim.calculate("household_id").values

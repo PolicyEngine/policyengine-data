@@ -98,6 +98,7 @@ def calibrate_single_geography_level(
     noise_level: Optional[float] = 10.0,
     use_dataset_weights: Optional[bool] = True,
     regularize_with_l0: Optional[bool] = False,
+    raise_error: Optional[bool] = True,
 ):
     """
     This function will calibrate the dataset for a specific geography level, defaulting to stacking the base dataset per area within it.
@@ -122,6 +123,7 @@ def calibrate_single_geography_level(
         noise_level (Optional[float]): The level of noise to apply during calibration. Default: 10.0.
         use_dataset_weights (Optional[bool]): Whether to use original dataset weights as the starting weights for calibration. Default: True.
         regularize_with_l0 (Optional[bool]): Whether to use L0 regularization during calibration. Default: False.
+        raise_error (Optional[bool]): Whether to raise an error if matrix creation fails. Default: True.
 
     Returns:
         geography_level_calibrated_dataset (SingleYearDataset): The calibrated dataset for the specified geography level.
@@ -173,7 +175,7 @@ def calibrate_single_geography_level(
             metrics_matrix,
             targets,
             target_info=target_info,
-            raise_error=True,
+            raise_error=raise_error,
         )
 
         target_names = []
@@ -298,6 +300,7 @@ def calibrate_all_levels(
     db_uri: Optional[str] = None,
     noise_level: Optional[float] = 10.0,
     regularize_with_l0: Optional[bool] = False,
+    raise_error: Optional[bool] = True,
 ):
     """
     This function will calibrate the dataset for all geography levels in the database, defaulting to stacking the base dataset per area within the specified level (it is recommended to use the lowest in the hierarchy for stacking). (Eg. when calibrating for district, state and national levels in the US, this function will stack the CPS dataset for each district and calibrate the stacked dataset for the three levels' targets.)
@@ -319,6 +322,7 @@ def calibrate_all_levels(
         db_uri (Optional[str]): The database URI to use for calibration. If None, it will download the database from the default URI.
         noise_level (Optional[float]): The noise level to use for calibration. Default: 10.0.
         regularize_with_l0 (Optional[bool]): Whether to use L0 regularization for calibration. Default: False.
+        raise_error (Optional[bool]): Whether to raise an error if matrix creation fails. Default: True.
 
     Returns:
         fully_calibrated_dataset (SingleYearDataset): The calibrated dataset for all geography levels.
@@ -351,8 +355,8 @@ def calibrate_all_levels(
         )
 
         single_year_dataset = SingleYearDataset.from_simulation(
-            sim_data=sim_data_to_stack,
-            year=year,
+            simulation=sim_data_to_stack,
+            time_period=year,
         )
 
         # Detect ids that require resetting
@@ -427,12 +431,11 @@ def calibrate_all_levels(
         dataset="Dataset_stacked.h5",
         reform_id=0,
     )
-
     metrics_evaluation = validate_metrics_matrix(
         metrics_matrix,
         targets,
         target_info=target_info,
-        raise_error=True,
+        raise_error=raise_error,
     )
 
     target_names = []
