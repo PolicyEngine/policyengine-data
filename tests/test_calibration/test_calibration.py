@@ -63,9 +63,6 @@ areas_in_state_level = {
 }
 
 
-@pytest.mark.skip(
-    reason="Online database is not yet updated with necessary format."
-)
 def test_calibration_per_geographic_level_iteration():
     """
     Test and example of the calibration routine involving calibrating one geographic level at a time from lowest to highest in the hierarchy and generating sparsity in all but the last levels.
@@ -126,9 +123,6 @@ def test_calibration_per_geographic_level_iteration():
     ).sum() > 0, "Household weights do not differ between state and national levels, suggesting national calibration was unsucessful."
 
 
-@pytest.mark.skip(
-    reason="Online database is not yet updated with necessary format."
-)
 def test_calibration_combining_all_levels_at_once():
     """
     Test and example of the calibration routine involving stacking datasets at a single (most often lowest) geographic level for increased data richness and then calibrating said stacked dataset for all geographic levels at once.
@@ -147,6 +141,7 @@ def test_calibration_combining_all_levels_at_once():
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
         db_uri="sqlite:///policy_data.db",  # remove once online database is updated
+        geo_hierarchy=["0100000US", "0400000US"],
         dataset_subsample_size=2000,
         regularize_with_l0=True,
         raise_error=False,  # this will avoid raising an error if some targets have no records contributing to them (given sampling)

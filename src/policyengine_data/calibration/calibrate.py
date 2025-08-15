@@ -3,7 +3,7 @@ This file will contain the logic for calibrating policy engine data from start t
 """
 
 import logging
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -20,6 +20,9 @@ from policyengine_data.calibration.metrics_matrix_creation import (
 from policyengine_data.calibration.target_rescaling import (
     download_database,
     rescale_calibration_targets,
+)
+from policyengine_data.calibration.utils import (
+    create_geographic_normalization_factor,
 )
 from policyengine_data.tools.legacy_class_conversions import (
     SingleYearDataset_to_Dataset,
@@ -99,7 +102,7 @@ def calibrate_single_geography_level(
     use_dataset_weights: Optional[bool] = True,
     regularize_with_l0: Optional[bool] = False,
     raise_error: Optional[bool] = True,
-):
+) -> "SingleYearDataset":
     """
     This function will calibrate the dataset for a specific geography level, defaulting to stacking the base dataset per area within it.
     It will handle conversion between dataset classes to enable:
@@ -291,17 +294,19 @@ def calibrate_single_geography_level(
     return geography_level_calibrated_dataset
 
 
+# TODO: create normalization factor to pass into Calibrator balancing targets at different levels
 def calibrate_all_levels(
     database_stacking_areas: Dict[str, str],
     dataset: str,
     dataset_subsample_size: Optional[int] = None,
     geo_sim_filter_variable: Optional[str] = "ucgid",
+    geo_hierarchy: Optional[List[str]] = None,
     year: Optional[int] = 2023,
     db_uri: Optional[str] = None,
     noise_level: Optional[float] = 10.0,
     regularize_with_l0: Optional[bool] = False,
     raise_error: Optional[bool] = True,
-):
+) -> "SingleYearDataset":
     """
     This function will calibrate the dataset for all geography levels in the database, defaulting to stacking the base dataset per area within the specified level (it is recommended to use the lowest in the hierarchy for stacking). (Eg. when calibrating for district, state and national levels in the US, this function will stack the CPS dataset for each district and calibrate the stacked dataset for the three levels' targets.)
     It will handle conversion between dataset classes to enable:
@@ -318,6 +323,7 @@ def calibrate_all_levels(
         dataset (str): Path to the base dataset to stack.
         dataset_subsample_size (Optional[int]): The size of the subsample to use for calibration.
         geo_sim_filter_variable (Optional[str]): The variable to use for geographic similarity filtering. Default in the US: "ucgid".
+        geo_hierarchy (Optional[List[str]]): The geographic hierarchy to use for calibration.
         year (Optional[int]): The year to use for calibration. Default: 2023.
         db_uri (Optional[str]): The database URI to use for calibration. If None, it will download the database from the default URI.
         noise_level (Optional[float]): The noise level to use for calibration. Default: 10.0.
@@ -438,6 +444,10 @@ def calibrate_all_levels(
         raise_error=raise_error,
     )
 
+    normalization_factor = create_geographic_normalization_factor(
+        geo_hierarchy=geo_hierarchy, target_info=target_info
+    )
+
     target_names = []
     excluded_targets = []
     for target_id, info in target_info.items():
@@ -462,6 +472,7 @@ def calibrate_all_levels(
         excluded_targets=(
             excluded_targets if len(excluded_targets) > 0 else None
         ),
+        normalization_factor=normalization_factor,
         sparse_learning_rate=0.1,
         regularize_with_l0=regularize_with_l0,
         csv_path=f"full_calibration.csv",
@@ -494,7 +505,6 @@ if __name__ == "__main__":
     state_level_calibrated_dataset = calibrate_single_geography_level(
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
-        db_uri="sqlite:///policy_data.db",
         use_dataset_weights=False,
         regularize_with_l0=True,
     )
@@ -504,7 +514,8 @@ if __name__ == "__main__":
     ].values
 
     SingleYearDataset_to_Dataset(
-        state_level_calibrated_dataset, output_path="Dataset_state_level.h5"
+        state_level_calibrated_dataset,
+        output_path="Dataset_state_level_age_medicaid_snap_eitc_agi_targets.h5",
     )
 
     print("Completed calibration for state level dataset.")
@@ -516,9 +527,8 @@ if __name__ == "__main__":
 
     national_level_calibrated_dataset = calibrate_single_geography_level(
         areas_in_national_level,
-        dataset="Dataset_state_level.h5",
+        dataset="Dataset_state_level_age_medicaid_snap_eitc_agi_targets.h5",
         stack_datasets=False,
-        db_uri="sqlite:///policy_data.db",
         noise_level=0.0,
         use_dataset_weights=True,
         regularize_with_l0=False,
@@ -530,7 +540,7 @@ if __name__ == "__main__":
 
     SingleYearDataset_to_Dataset(
         national_level_calibrated_dataset,
-        output_path="Dataset_national_level.h5",
+        output_path="Dataset_national_level_age_medicaid_snap_eitc_agi_targets.h5",
     )
 
     print("Completed calibration for national level dataset.")

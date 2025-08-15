@@ -19,6 +19,7 @@ dependencies = [
     "microcalibrate",
     "sqlalchemy",
     "huggingface_hub",
+    "torch",
 ]
 
 [project.optional-dependencies]

@@ -6,41 +6,9 @@ import pandas as pd
 from policyengine_us import Microsimulation
 from sqlalchemy import create_engine
 
+from .target_rescaling import download_database
+
 logger = logging.getLogger(__name__)
-
-
-def download_database(
-    filename: Optional[str] = "policy_data.db",
-    repo_id: Optional[str] = "policyengine/test",
-) -> create_engine:
-    """
-    Download the SQLite database from Hugging Face Hub and return the connection string.
-
-    Args:
-        filename: Optional name of the database file to download
-        repo_id: Optional Hugging Face repository ID where the database is stored
-
-    Returns:
-        Connection string for the SQLite database
-    """
-    import os
-
-    from huggingface_hub import hf_hub_download
-
-    # Download the file to the current working directory
-    try:
-        downloaded_path = hf_hub_download(
-            repo_id=repo_id,
-            filename=filename,
-            local_dir=".",  # Use "." for the current working directory
-            local_dir_use_symlinks=False,  # Recommended to avoid symlinks
-        )
-        path = os.path.abspath(downloaded_path)
-        logger.info(f"File downloaded successfully to: {path}")
-        return f"sqlite:///{path}"
-
-    except Exception as e:
-        raise ValueError(f"An error occurred: {e}")
 
 
 # NOTE (juaristi22): This could fail if trying to filter by more than one stratum constraint if there are mismatches between the filtering variable, value and operation.
