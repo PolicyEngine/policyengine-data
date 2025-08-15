@@ -138,7 +138,6 @@ def test_calibration_combining_all_levels_at_once():
     fully_calibrated_dataset = calibrate_all_levels(
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
-        db_uri="sqlite:///policy_data.db",  # remove once online database is updated
         geo_hierarchy=["0100000US", "0400000US"],
         dataset_subsample_size=2000,
         regularize_with_l0=True,

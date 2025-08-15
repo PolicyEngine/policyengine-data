@@ -159,6 +159,7 @@ def apply_single_constraint(
     """
     operations = {
         "equals": lambda v, cv: v == cv,
+        "is_greater_than": lambda v, cv: v > cv,
         "greater_than": lambda v, cv: v > cv,
         "greater_than_or_equal": lambda v, cv: v >= cv,
         "less_than": lambda v, cv: v < cv,
@@ -321,6 +322,7 @@ def parse_constraint_for_name(constraint: pd.Series) -> str:
     # Map operations to symbols for readability
     op_symbols = {
         "equals": "=",
+        "is_greater_than": ">",
         "greater_than": ">",
         "greater_than_or_equal": ">=",
         "less_than": "<",
