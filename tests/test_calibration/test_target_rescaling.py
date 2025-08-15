@@ -3,7 +3,7 @@ Test the logic for rescaling calibration targets from a database.
 """
 
 
-def setup_test_database():
+def setup_test_database() -> str:
     """
     Creates an in-memory SQLite database for testing.
     Populates it with a geographic hierarchy where children do not sum to the parent.
@@ -146,7 +146,7 @@ def setup_test_database():
     return db_uri
 
 
-def test_rescale_with_geographic_scaling():
+def test_rescale_with_geographic_scaling() -> None:
     """
     Tests that child strata (states) are correctly scaled to match the
     parent stratum (nation) total.

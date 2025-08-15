@@ -39,17 +39,34 @@ class TestNormaliseTableKeys:
             {"user_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
         )
 
-        tables = {"users": users}
-        primary_keys = {"users": "user_id"}
+        orders = pd.DataFrame(
+            {
+                "order_id": [201, 205, 207],
+                "user_id": [105, 101, 105],
+                "amount": [25.99, 15.50, 42.00],
+            }
+        )
 
-        result = normalise_table_keys(tables, primary_keys, start_index=10)
+        tables = {"users": users, "orders": orders}
+        primary_keys = {"users": "user_id", "orders": "order_id"}
+        foreign_keys = {"orders": {"user_id": "users"}}
 
-        assert len(result) == 1
+        result = normalise_table_keys(
+            tables,
+            primary_keys,
+            foreign_keys,
+            start_index={"users": 10, "orders": 20},
+        )
+
+        assert len(result) == 2
         assert "users" in result
+        assert "orders" in result
 
         normalised_users = result["users"]
         assert list(normalised_users["user_id"]) == [10, 11, 12]
         assert list(normalised_users["name"]) == ["Alice", "Bob", "Carol"]
+        normalised_orders = result["orders"]
+        assert list(normalised_orders["order_id"]) == [20, 21, 22]
 
     def test_two_tables_with_foreign_keys(self):
         """Test normalisation with explicit foreign key relationships."""

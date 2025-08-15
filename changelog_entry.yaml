@@ -1,0 +1,7 @@
+- bump: minor
+  changes:
+    added:
+    - Logic to create estimate matrix for calibration from a database.
+    - Conversion functions between dataset classes to enable stacking datasets.
+    - Logic to calibrate for multiple geographic levels with two different routines.
+    - Calibration documentation.
