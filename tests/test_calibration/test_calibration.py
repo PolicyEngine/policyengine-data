@@ -80,7 +80,6 @@ def test_calibration_per_geographic_level_iteration():
     state_level_calibrated_dataset = calibrate_single_geography_level(
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
-        db_uri="sqlite:///policy_data.db",  # remove once online database is updated
         dataset_subsample_size=2000,  # approximately 10% of the base dataset to decrease computation costs
         use_dataset_weights=False,
         regularize_with_l0=True,
@@ -99,7 +98,6 @@ def test_calibration_per_geographic_level_iteration():
         areas_in_national_level,
         dataset="Dataset_state_level.h5",
         stack_datasets=False,
-        db_uri="sqlite:///policy_data.db",  # remove once online database is updated
         noise_level=0.0,
         use_dataset_weights=True,  # use the previously calibrated weights
         regularize_with_l0=False,
