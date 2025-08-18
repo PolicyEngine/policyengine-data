@@ -8,6 +8,7 @@ import pytest
 
 
 def test_matrix_creation() -> None:
+    from policyengine_us import Microsimulation
     from policyengine_data.calibration import (
         create_metrics_matrix,
         validate_metrics_matrix,
@@ -21,6 +22,7 @@ def test_matrix_creation() -> None:
     metrics_matrix, target_values, target_info = create_metrics_matrix(
         db_uri=db_uri,
         time_period=2023,
+        microsimulation_class=Microsimulation,
         dataset="hf://policyengine/policyengine-us-data/cps_2023.h5",
         reform_id=0,
     )

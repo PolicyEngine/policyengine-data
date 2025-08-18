@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 
 def calibrate_single_geography_level(
+    microsimulation_class,
     calibration_areas: Dict[str, str],
     dataset: str,
     stack_datasets: Optional[bool] = True,
@@ -57,6 +58,7 @@ def calibrate_single_geography_level(
         7. Stacking all areas at that level into a single dataset.
 
     Args:
+        microsimulation_class: The Microsimulation class to use for creating simulations.
         calibration_areas (Dict[str, str]): A dictionary mapping area names to their corresponding geography level.
         dataset (str): The name of the dataset to be calibrated.
         stack_datasets (Optional[bool]): Whether to assign the dataset to each area in the geography level and combine them. Default: True.
@@ -87,11 +89,13 @@ def calibrate_single_geography_level(
 
         if stack_datasets:
             # Load dataset configured for the specific geography first
+            # TODO: move away from hardcoding UCGID for geographic identification once -us is updated
             from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
                 UCGID,
             )
 
             sim_data_to_calibrate = load_dataset_for_geography_legacy(
+                microsimulation_class=microsimulation_class,
                 year=year,
                 dataset=dataset,
                 dataset_subsample_size=dataset_subsample_size,
@@ -101,9 +105,7 @@ def calibrate_single_geography_level(
                 ),  # will need a non-hardcoded solution to assign geography_identifier in the future
             )
         else:
-            from policyengine_us import Microsimulation
-
-            sim_data_to_calibrate = Microsimulation(dataset=dataset)
+            sim_data_to_calibrate = microsimulation_class(dataset=dataset)
             sim_data_to_calibrate.default_input_period = year
             sim_data_to_calibrate.build_from_dataset()
 
@@ -111,6 +113,7 @@ def calibrate_single_geography_level(
         metrics_matrix, targets, target_info = create_metrics_matrix(
             db_uri=db_uri,
             time_period=year,
+            microsimulation_class=microsimulation_class,
             sim=sim_data_to_calibrate,
             stratum_filter_variable=geo_db_filter_variable,
             stratum_filter_value=geo_identifier,
@@ -162,6 +165,7 @@ def calibrate_single_geography_level(
 
         # Minimize the calibrated dataset storing only records with non-zero weights
         single_year_calibrated_dataset = minimize_calibrated_dataset_legacy(
+            microsimulation_class=microsimulation_class,
             sim=sim_data_to_calibrate,
             year=year,
             optimized_weights=(
@@ -237,6 +241,7 @@ def calibrate_single_geography_level(
 
 
 def calibrate_all_levels(
+    microsimulation_class,
     database_stacking_areas: Dict[str, str],
     dataset: str,
     dataset_subsample_size: Optional[int] = None,
@@ -260,6 +265,7 @@ def calibrate_all_levels(
         7. Filtering the resulting dataset to only include households with non-zero weights.
 
     Args:
+        microsimulation_class: The Microsimulation class to use for creating simulations.
         database_stacking_areas (Dict[str, str]): A dictionary mapping area names to their identifiers for base dataset stacking.
         dataset (str): Path to the base dataset to stack.
         dataset_subsample_size (Optional[int]): The size of the subsample to use for calibration.
@@ -292,6 +298,7 @@ def calibrate_all_levels(
         )
 
         sim_data_to_stack = load_dataset_for_geography_legacy(
+            microsimulation_class=microsimulation_class,
             year=year,
             dataset=dataset,
             dataset_subsample_size=dataset_subsample_size,
@@ -375,6 +382,7 @@ def calibrate_all_levels(
     metrics_matrix, targets, target_info = create_metrics_matrix(
         db_uri=db_uri,
         time_period=year,
+        microsimulation_class=microsimulation_class,
         dataset="Dataset_stacked.h5",
         reform_id=0,
     )
@@ -422,14 +430,13 @@ def calibrate_all_levels(
     optimized_sparse_weights = calibrator.sparse_weights
     optimized_weights = calibrator.weights
 
-    from policyengine_us import Microsimulation
-
-    sim_stacked_dataset = Microsimulation(dataset="Dataset_stacked.h5")
+    sim_stacked_dataset = microsimulation_class(dataset="Dataset_stacked.h5")
     sim_stacked_dataset.default_input_period = year
     sim_stacked_dataset.build_from_dataset()
 
     # Minimize the calibrated dataset storing only records with non-zero weights
     fully_calibrated_dataset = minimize_calibrated_dataset_legacy(
+        microsimulation_class=microsimulation_class,
         sim=sim_stacked_dataset,
         year=year,
         optimized_weights=(
@@ -443,6 +450,8 @@ def calibrate_all_levels(
 
 
 if __name__ == "__main__":
+    from policyengine_us import Microsimulation
+
     print("US calibration example:")
 
     areas_in_national_level = {
@@ -504,6 +513,7 @@ if __name__ == "__main__":
     }
 
     state_level_calibrated_dataset = calibrate_single_geography_level(
+        Microsimulation,
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
         use_dataset_weights=False,
@@ -527,6 +537,7 @@ if __name__ == "__main__":
     )
 
     national_level_calibrated_dataset = calibrate_single_geography_level(
+        Microsimulation,
         areas_in_national_level,
         dataset="Dataset_state_level_age_medicaid_snap_eitc_agi_targets.h5",
         stack_datasets=False,

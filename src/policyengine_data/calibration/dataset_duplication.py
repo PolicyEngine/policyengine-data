@@ -2,7 +2,6 @@ from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
-from policyengine_us import Microsimulation
 from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
     UCGID,
 )
@@ -16,16 +15,18 @@ Functions using the legacy Dataset class to operate datasets given their depende
 
 
 def load_dataset_for_geography_legacy(
+    microsimulation_class,
     year: Optional[int] = 2023,
     dataset: Optional[str] = None,
     dataset_subsample_size: Optional[int] = None,
     geography_variable: Optional[str] = "ucgid",
     geography_identifier: Optional[Any] = UCGID("0100000US"),
-) -> "Microsimulation":
+):
     """
     Load the necessary dataset from the legacy Dataset class, making it specific to a geography area. (e.g., CPS for the state of California).
 
     Args:
+        microsimulation_class: The Microsimulation class to use for creating simulations.
         year (Optional[int]): The year for which to calibrate the dataset.
         dataset (Optional[None]): The dataset to load. If None, defaults to the CPS dataset for the specified year.
         dataset_subsample_size (Optional[int]): The size of the base dataset subsample to use for calibration. If None, the full dataset will be used for stacking.
@@ -38,7 +39,7 @@ def load_dataset_for_geography_legacy(
     if dataset is None:
         dataset = f"hf://policyengine/policyengine-us-data/cps_{year}.h5"
 
-    sim = Microsimulation(dataset=dataset)
+    sim = microsimulation_class(dataset=dataset)
     sim.default_input_period = year
     sim.build_from_dataset()
 
@@ -75,7 +76,7 @@ def load_dataset_for_geography_legacy(
             ].copy()
 
             # Create new simulation from subsampled data
-            sim = Microsimulation()
+            sim = microsimulation_class()
             sim.dataset = Dataset.from_dataframe(subset_df, year)
             sim.default_input_period = year
             sim.build_from_dataset()
@@ -91,13 +92,14 @@ def load_dataset_for_geography_legacy(
 
 
 def minimize_calibrated_dataset_legacy(
-    sim: Microsimulation, year: int, optimized_weights: pd.Series
+    microsimulation_class, sim, year: int, optimized_weights: pd.Series
 ) -> "SingleYearDataset":
     """
     Use sparse weights to minimize the calibrated dataset storing in the legacy Dataset class.
 
     Args:
-        sim (Microsimulation): The Microsimulation object with the dataset to minimize.
+        microsimulation_class: The Microsimulation class to use for creating simulations.
+        sim: The Microsimulation object with the dataset to minimize.
         year (int): Year the dataset is representing.
         optimized_weights (pd.Series): The calibrated, regularized weights used to minimize the dataset.
 
@@ -155,7 +157,7 @@ def minimize_calibrated_dataset_legacy(
     subset_df = df[df[df_household_id_column].isin(h_ids)].copy()
 
     # Update the dataset and rebuild the simulation
-    sim = Microsimulation()
+    sim = microsimulation_class()
     sim.dataset = Dataset.from_dataframe(subset_df, year)
     sim.default_input_period = year
     sim.build_from_dataset()
@@ -171,6 +173,7 @@ Functions using the new SingleYearDataset class once the Microsimulation object 
 
 
 def load_dataset_for_geography(
+    microsimulation_class,
     year: Optional[int] = 2023,
     dataset: Optional[str] = None,
     geography_variable: Optional[str] = "ucgid",
@@ -180,6 +183,7 @@ def load_dataset_for_geography(
     Load the necessary dataset from the legacy Dataset class into the new SingleYearDataset, or directly from it, making it specific to a geography area. (e.g., CPS for the state of California).
 
     Args:
+        microsimulation_class: The Microsimulation class to use for creating simulations.
         year (Optional[int]): The year for which to calibrate the dataset.
         dataset (Optional[None]): The dataset to load. If None, defaults to the CPS dataset for the specified year.
         geography_variable (Optional[str]): The variable representing the geography in the dataset.
@@ -188,12 +192,10 @@ def load_dataset_for_geography(
     Returns:
         SingleYearDataset: The calibrated dataset after applying regularization.
     """
-    from policyengine_us import Microsimulation
-
     if dataset is None:
         dataset = f"hf://policyengine/policyengine-us-data/cps_{year}.h5"
 
-    sim = Microsimulation(dataset=dataset)
+    sim = microsimulation_class(dataset=dataset)
 
     # To load from the Microsimulation object for compatibility with legacy Dataset class
     single_year_dataset = SingleYearDataset.from_simulation(

@@ -69,6 +69,7 @@ def test_calibration_per_geographic_level_iteration():
 
     Conversion between dataset class types is necessary until full migration to the new SingleYearDataset class in the policyengine_core repository.
     """
+    from policyengine_us import Microsimulation
     from policyengine_data.tools.legacy_class_conversions import (
         SingleYearDataset_to_Dataset,
     )
@@ -78,9 +79,10 @@ def test_calibration_per_geographic_level_iteration():
 
     # Calibrate the state level dataset with sparsity
     state_level_calibrated_dataset = calibrate_single_geography_level(
+        Microsimulation,
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
-        dataset_subsample_size=2000,  # approximately 10% of the base dataset to decrease computation costs
+        dataset_subsample_size=1000,  # approximately 5% of the base dataset to decrease computation costs
         use_dataset_weights=False,
         regularize_with_l0=True,
     )
@@ -95,6 +97,7 @@ def test_calibration_per_geographic_level_iteration():
 
     # Calibrate the national level dataset using the previously calibrated state dataset, without sparsity, and without initial noise (trying to minimize deviation from state-calibrated weights)
     national_level_calibrated_dataset = calibrate_single_geography_level(
+        Microsimulation,
         areas_in_national_level,
         dataset="Dataset_state_level.h5",
         stack_datasets=False,
@@ -127,6 +130,7 @@ def test_calibration_combining_all_levels_at_once():
 
     Conversion between dataset class types is necessary until full migration to the new SingleYearDataset class in the policyengine_core repository.
     """
+    from policyengine_us import Microsimulation
     from policyengine_data.tools.legacy_class_conversions import (
         SingleYearDataset_to_Dataset,
     )
@@ -136,10 +140,11 @@ def test_calibration_combining_all_levels_at_once():
 
     # Calibrate the full dataset at once (only passing the identifyers of the areas for which the base dataset will be stacked)
     fully_calibrated_dataset = calibrate_all_levels(
+        Microsimulation,
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
         geo_hierarchy=["0100000US", "0400000US"],
-        dataset_subsample_size=2000,
+        dataset_subsample_size=1000,
         regularize_with_l0=True,
         raise_error=False,  # this will avoid raising an error if some targets have no records contributing to them (given sampling)
     )
@@ -152,6 +157,6 @@ def test_calibration_combining_all_levels_at_once():
         fully_calibrated_dataset, output_path="Dataset_fully_calibrated.h5"
     )
 
-    assert len(weights) < 2000 * len(
+    assert len(weights) < 1000 * len(
         areas_in_state_level
-    ), "Weight vector length should be less than the sampled 2000 per area after regularization."
+    ), "Weight vector length should be less than the sampled 1000 per area after regularization."

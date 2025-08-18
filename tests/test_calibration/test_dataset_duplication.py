@@ -10,9 +10,10 @@ from policyengine_data import SingleYearDataset
 
 def test_dataset_assignment_to_geography() -> None:
     """Test that a dataset can be assigned to a geographic level without errors."""
+    from policyengine_us import Microsimulation
     from policyengine_data.calibration import load_dataset_for_geography_legacy
 
-    sim = load_dataset_for_geography_legacy()
+    sim = load_dataset_for_geography_legacy(Microsimulation)
 
     assert hasattr(sim, "dataset")
     assert hasattr(sim, "default_input_period")
@@ -31,7 +32,7 @@ def test_dataset_assignment_to_geography() -> None:
     # Test with California state identifier
     california_ucgid = UCGID("0400000US06")
     sim = load_dataset_for_geography_legacy(
-        geography_identifier=california_ucgid
+        Microsimulation, geography_identifier=california_ucgid
     )
 
     # Verify geography is set correctly
@@ -72,7 +73,10 @@ def test_dataset_minimization() -> None:
 
     # Minimize the dataset
     after_minimizing = minimize_calibrated_dataset_legacy(
-        sim, year=2023, optimized_weights=optimized_sparse_weights
+        Microsimulation,
+        sim,
+        year=2023,
+        optimized_weights=optimized_sparse_weights,
     )
 
     assert len(before_minimizing.entities["household"]) > len(
@@ -109,10 +113,11 @@ def test_dataset_minimization() -> None:
 
 def test_dataset_subsampling() -> None:
     """Test that dataset subsampling works correctly."""
+    from policyengine_us import Microsimulation
     from policyengine_data.calibration import load_dataset_for_geography_legacy
 
     # Load full dataset first
-    sim_full = load_dataset_for_geography_legacy()
+    sim_full = load_dataset_for_geography_legacy(Microsimulation)
     full_households = len(sim_full.calculate("household_id").unique())
 
     # Test subsampling with a smaller size
@@ -120,7 +125,7 @@ def test_dataset_subsampling() -> None:
         100, full_households // 2
     )  # Ensure we're actually reducing the size
     sim_subsampled = load_dataset_for_geography_legacy(
-        dataset_subsample_size=subsample_size
+        Microsimulation, dataset_subsample_size=subsample_size
     )
 
     subsampled_households = len(
@@ -139,7 +144,7 @@ def test_dataset_subsampling() -> None:
 
     # Test with a subsample size larger than available households (should return original)
     sim_large_subsample = load_dataset_for_geography_legacy(
-        dataset_subsample_size=full_households + 1000
+        Microsimulation, dataset_subsample_size=full_households + 1000
     )
     large_subsample_households = len(
         sim_large_subsample.calculate("household_id").unique()

@@ -3,7 +3,6 @@ from typing import Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from policyengine_us import Microsimulation
 from sqlalchemy import create_engine
 
 from .target_rescaling import download_database
@@ -189,7 +188,7 @@ def apply_single_constraint(
 
 
 def apply_constraints_at_entity_level(
-    sim: Microsimulation, constraints_df: pd.DataFrame, target_entity: str
+    sim, constraints_df: pd.DataFrame, target_entity: str
 ) -> np.ndarray:
     """
     Create a boolean mask at the target entity level by applying all constraints.
@@ -248,7 +247,7 @@ def apply_constraints_at_entity_level(
 
 
 def process_single_target(
-    sim: Microsimulation,
+    sim,
     target: pd.Series,
     constraints_df: pd.DataFrame,
 ) -> Tuple[np.ndarray, Dict[str, any]]:
@@ -377,7 +376,8 @@ def build_target_name(variable: str, constraints_df: pd.DataFrame) -> str:
 def create_metrics_matrix(
     db_uri: str,
     time_period: int,
-    sim: Optional[Microsimulation] = None,
+    microsimulation_class,
+    sim=None,
     dataset: Optional[type] = None,
     reform_id: Optional[int] = 0,
     stratum_filter_variable: Optional[str] = None,
@@ -395,6 +395,7 @@ def create_metrics_matrix(
     Args:
         db_uri: Database connection string
         time_period: Time period for the simulation
+        microsimulation_class: The Microsimulation class to use for creating simulations
         sim: Optional existing Microsimulation instance
         dataset: Optional dataset type for creating new simulation
         reform_id: Reform scenario ID (0 for baseline)
@@ -418,7 +419,7 @@ def create_metrics_matrix(
     if sim is None:
         if dataset is None:
             raise ValueError("Either 'sim' or 'dataset' must be provided")
-        sim = Microsimulation(dataset=dataset)
+        sim = microsimulation_class(dataset=dataset)
         sim.default_calculation_period = time_period
         sim.build_from_dataset()
 
@@ -570,6 +571,8 @@ def validate_metrics_matrix(
 
 
 if __name__ == "__main__":
+    from policyengine_us import Microsimulation
+
     # Download the database from Hugging Face Hub
     db_uri = download_database()
 
@@ -577,6 +580,7 @@ if __name__ == "__main__":
     metrics_matrix, target_values, target_info = create_metrics_matrix(
         db_uri=db_uri,
         time_period=2023,
+        microsimulation_class=Microsimulation,
         dataset="hf://policyengine/policyengine-us-data/cps_2023.h5",
         reform_id=0,
     )

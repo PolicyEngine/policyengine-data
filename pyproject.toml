@@ -14,11 +14,10 @@ dependencies = [
     "huggingface_hub>=0.25.1",
     "tables",
     "policyengine-core>=3.6.4",
-    "policyengine-us>=1.366.0",
+    "policyengine-us", # remove as soon as we fix UCGID
     "microdf-python",
     "microcalibrate",
     "sqlalchemy",
-    "huggingface_hub",
     "torch",
 ]
 
@@ -33,6 +32,7 @@ dev = [
     "build",
     "linecheck",
     "yaml-changelog>=0.1.7",
+    "policyengine-us>=1.366.0",
 ]
 
 docs = [
