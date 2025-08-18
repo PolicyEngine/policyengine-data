@@ -47,6 +47,7 @@ def calibrate_single_geography_level(
     noise_level: Optional[float] = 10.0,
     use_dataset_weights: Optional[bool] = True,
     regularize_with_l0: Optional[bool] = False,
+    calibration_log_path: Optional[str] = None,
     raise_error: Optional[bool] = True,
 ) -> "SingleYearDataset":
     """
@@ -72,6 +73,7 @@ def calibrate_single_geography_level(
         noise_level (Optional[float]): The level of noise to apply during calibration. Default: 10.0.
         use_dataset_weights (Optional[bool]): Whether to use original dataset weights as the starting weights for calibration. Default: True.
         regularize_with_l0 (Optional[bool]): Whether to use L0 regularization during calibration. Default: False.
+        calibration_log_path (Optional[str]): The path to the calibration log file. If None, calibration log CSVs will not be saved.
         raise_error (Optional[bool]): Whether to raise an error if matrix creation fails. Default: True.
 
     Returns:
@@ -154,7 +156,7 @@ def calibrate_single_geography_level(
             ),
             sparse_learning_rate=0.1,
             regularize_with_l0=regularize_with_l0,
-            csv_path=f"{area}_calibration.csv",
+            csv_path=calibration_log_path,
         )
         performance_log = calibrator.calibrate()
         optimized_sparse_weights = calibrator.sparse_weights
