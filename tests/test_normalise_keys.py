@@ -17,157 +17,161 @@ class TestNormaliseTableKeys:
 
     def test_simple_single_table(self):
         """Test normalisation of a single table with no foreign keys."""
-        users = pd.DataFrame(
-            {"user_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
+        persons = pd.DataFrame(
+            {"person_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
         )
 
-        tables = {"users": users}
-        primary_keys = {"users": "user_id"}
+        tables = {"persons": persons}
+        primary_keys = {"persons": "person_id"}
 
         result = normalise_table_keys(tables, primary_keys)
 
         assert len(result) == 1
-        assert "users" in result
+        assert "persons" in result
 
-        normalised_users = result["users"]
-        assert list(normalised_users["user_id"]) == [0, 1, 2]
-        assert list(normalised_users["name"]) == ["Alice", "Bob", "Carol"]
+        normalised_persons = result["persons"]
+        assert list(normalised_persons["person_id"]) == [0, 1, 2]
+        assert list(normalised_persons["name"]) == ["Alice", "Bob", "Carol"]
 
     def test_custom_start_index(self):
         """Test normalisation with custom start index."""
-        users = pd.DataFrame(
-            {"user_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
+        persons = pd.DataFrame(
+            {"person_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
         )
 
-        orders = pd.DataFrame(
+        households = pd.DataFrame(
             {
-                "order_id": [201, 205, 207],
-                "user_id": [105, 101, 105],
-                "amount": [25.99, 15.50, 42.00],
+                "household_id": [201, 205, 207],
+                "person_id": [105, 101, 105],
+                "income": [25000, 15000, 42000],
             }
         )
 
-        tables = {"users": users, "orders": orders}
-        primary_keys = {"users": "user_id", "orders": "order_id"}
-        foreign_keys = {"orders": {"user_id": "users"}}
+        tables = {"persons": persons, "households": households}
+        primary_keys = {"persons": "person_id", "households": "household_id"}
+        foreign_keys = {"households": {"person_id": "persons"}}
 
         result = normalise_table_keys(
             tables,
             primary_keys,
             foreign_keys,
-            start_index={"users": 10, "orders": 20},
+            start_index={"persons": 10, "households": 20},
         )
 
         assert len(result) == 2
-        assert "users" in result
-        assert "orders" in result
+        assert "persons" in result
+        assert "households" in result
 
-        normalised_users = result["users"]
-        assert list(normalised_users["user_id"]) == [10, 11, 12]
-        assert list(normalised_users["name"]) == ["Alice", "Bob", "Carol"]
-        normalised_orders = result["orders"]
-        assert list(normalised_orders["order_id"]) == [20, 21, 22]
+        normalised_persons = result["persons"]
+        assert list(normalised_persons["person_id"]) == [10, 11, 12]
+        assert list(normalised_persons["name"]) == ["Alice", "Bob", "Carol"]
+        normalised_households = result["households"]
+        assert list(normalised_households["household_id"]) == [20, 21, 22]
 
     def test_two_tables_with_foreign_keys(self):
         """Test normalisation with explicit foreign key relationships."""
-        users = pd.DataFrame(
-            {"user_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
+        persons = pd.DataFrame(
+            {"person_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
         )
 
-        orders = pd.DataFrame(
+        households = pd.DataFrame(
             {
-                "order_id": [201, 205, 207],
-                "user_id": [105, 101, 105],
-                "amount": [25.99, 15.50, 42.00],
+                "household_id": [201, 205, 207],
+                "person_id": [105, 101, 105],
+                "income": [25000, 15000, 42000],
             }
         )
 
-        tables = {"users": users, "orders": orders}
-        primary_keys = {"users": "user_id", "orders": "order_id"}
-        foreign_keys = {"orders": {"user_id": "users"}}
+        tables = {"persons": persons, "households": households}
+        primary_keys = {"persons": "person_id", "households": "household_id"}
+        foreign_keys = {"households": {"person_id": "persons"}}
 
         result = normalise_table_keys(tables, primary_keys, foreign_keys)
 
-        # Check users table
-        normalised_users = result["users"]
-        assert set(normalised_users["user_id"]) == {0, 1, 2}
+        # Check persons table
+        normalised_persons = result["persons"]
+        assert set(normalised_persons["person_id"]) == {0, 1, 2}
 
-        # Check orders table
-        normalised_orders = result["orders"]
-        assert set(normalised_orders["order_id"]) == {0, 1, 2}
+        # Check households table
+        normalised_households = result["households"]
+        assert set(normalised_households["household_id"]) == {0, 1, 2}
 
         # Check foreign key relationships are preserved
-        # Original: user 105 had orders 201, 207
+        # Original: person 105 had households 201, 207
         # After normalisation: find which index 105 became
-        user_105_new_id = normalised_users[normalised_users["name"] == "Bob"][
-            "user_id"
-        ].iloc[0]
-        bob_orders = normalised_orders[
-            normalised_orders["user_id"] == user_105_new_id
+        person_105_new_id = normalised_persons[
+            normalised_persons["name"] == "Bob"
+        ]["person_id"].iloc[0]
+        bob_households = normalised_households[
+            normalised_households["person_id"] == person_105_new_id
         ]
-        assert len(bob_orders) == 2
-        assert set(bob_orders["amount"]) == {25.99, 42.00}
+        assert len(bob_households) == 2
+        assert set(bob_households["income"]) == {25000, 42000}
 
     def test_auto_detect_foreign_keys(self):
         """Test automatic detection of foreign key relationships."""
-        users = pd.DataFrame(
-            {"user_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
+        persons = pd.DataFrame(
+            {"person_id": [101, 105, 103], "name": ["Alice", "Bob", "Carol"]}
         )
 
-        orders = pd.DataFrame(
+        households = pd.DataFrame(
             {
-                "order_id": [201, 205, 207],
-                "user_id": [105, 101, 105],
-                "amount": [25.99, 15.50, 42.00],
+                "household_id": [201, 205, 207],
+                "person_id": [105, 101, 105],
+                "income": [25000, 15000, 42000],
             }
         )
 
-        tables = {"users": users, "orders": orders}
-        primary_keys = {"users": "user_id", "orders": "order_id"}
+        tables = {"persons": persons, "households": households}
+        primary_keys = {"persons": "person_id", "households": "household_id"}
 
         # Test without explicit foreign keys - should auto-detect
         result = normalise_table_keys(tables, primary_keys)
 
         # Verify relationships are still preserved
-        normalised_users = result["users"]
-        normalised_orders = result["orders"]
+        normalised_persons = result["persons"]
+        normalised_households = result["households"]
 
-        # Bob should still have his two orders
-        user_105_new_id = normalised_users[normalised_users["name"] == "Bob"][
-            "user_id"
-        ].iloc[0]
-        bob_orders = normalised_orders[
-            normalised_orders["user_id"] == user_105_new_id
+        # Bob should still have his two households
+        person_105_new_id = normalised_persons[
+            normalised_persons["name"] == "Bob"
+        ]["person_id"].iloc[0]
+        bob_households = normalised_households[
+            normalised_households["person_id"] == person_105_new_id
         ]
-        assert len(bob_orders) == 2
+        assert len(bob_households) == 2
 
     def test_multiple_foreign_keys(self):
         """Test table with multiple foreign key relationships."""
-        users = pd.DataFrame(
-            {"user_id": [1, 2, 3], "name": ["Alice", "Bob", "Carol"]}
+        persons = pd.DataFrame(
+            {"person_id": [1, 2, 3], "name": ["Alice", "Bob", "Carol"]}
         )
 
-        categories = pd.DataFrame(
+        benefit_units = pd.DataFrame(
             {
-                "category_id": [10, 20, 30],
-                "category_name": ["Electronics", "Books", "Clothing"],
+                "benefit_unit_id": [10, 20, 30],
+                "benefit_type": ["Disability", "Unemployment", "Family"],
             }
         )
 
-        orders = pd.DataFrame(
+        households = pd.DataFrame(
             {
-                "order_id": [100, 200, 300],
-                "user_id": [2, 1, 2],
-                "category_id": [20, 10, 30],
-                "amount": [25.99, 15.50, 42.00],
+                "household_id": [100, 200, 300],
+                "person_id": [2, 1, 2],
+                "benefit_unit_id": [20, 10, 30],
+                "income": [25000, 15000, 42000],
             }
         )
 
-        tables = {"users": users, "categories": categories, "orders": orders}
+        tables = {
+            "persons": persons,
+            "benefit_units": benefit_units,
+            "households": households,
+        }
         primary_keys = {
-            "users": "user_id",
-            "categories": "category_id",
-            "orders": "order_id",
+            "persons": "person_id",
+            "benefit_units": "benefit_unit_id",
+            "households": "household_id",
         }
 
         result = normalise_table_keys(tables, primary_keys)
@@ -178,17 +182,17 @@ class TestNormaliseTableKeys:
             assert set(df[pk_col]) == {0, 1, 2}
 
         # Verify relationships preserved
-        normalised_orders = result["orders"]
-        normalised_users = result["users"]
+        normalised_households = result["households"]
+        normalised_persons = result["persons"]
 
-        # Bob (original user_id=2) should have 2 orders
-        bob_new_id = normalised_users[normalised_users["name"] == "Bob"][
-            "user_id"
+        # Bob (original person_id=2) should have 2 households
+        bob_new_id = normalised_persons[normalised_persons["name"] == "Bob"][
+            "person_id"
         ].iloc[0]
-        bob_orders = normalised_orders[
-            normalised_orders["user_id"] == bob_new_id
+        bob_households = normalised_households[
+            normalised_households["person_id"] == bob_new_id
         ]
-        assert len(bob_orders) == 2
+        assert len(bob_households) == 2
 
     def test_empty_tables(self):
         """Test with empty input."""
@@ -198,8 +202,8 @@ class TestNormaliseTableKeys:
     def test_missing_primary_key_column(self):
         """Test error handling for missing primary key column."""
         df = pd.DataFrame({"name": ["Alice", "Bob"]})
-        tables = {"users": df}
-        primary_keys = {"users": "missing_id"}
+        tables = {"persons": df}
+        primary_keys = {"persons": "missing_id"}
 
         with pytest.raises(
             ValueError, match="Primary key column 'missing_id' not found"
@@ -208,36 +212,37 @@ class TestNormaliseTableKeys:
 
     def test_missing_foreign_key_column(self):
         """Test error handling for missing foreign key column."""
-        users = pd.DataFrame({"user_id": [1, 2], "name": ["Alice", "Bob"]})
-        orders = pd.DataFrame(
-            {"order_id": [100, 200], "amount": [25.99, 15.50]}
+        persons = pd.DataFrame({"person_id": [1, 2], "name": ["Alice", "Bob"]})
+        households = pd.DataFrame(
+            {"household_id": [100, 200], "income": [25000, 15000]}
         )
 
-        tables = {"users": users, "orders": orders}
-        primary_keys = {"users": "user_id", "orders": "order_id"}
-        foreign_keys = {"orders": {"missing_user_id": "users"}}
+        tables = {"persons": persons, "households": households}
+        primary_keys = {"persons": "person_id", "households": "household_id"}
+        foreign_keys = {"households": {"missing_person_id": "persons"}}
 
         with pytest.raises(
-            ValueError, match="Foreign key column 'missing_user_id' not found"
+            ValueError,
+            match="Foreign key column 'missing_person_id' not found",
         ):
             normalise_table_keys(tables, primary_keys, foreign_keys)
 
     def test_missing_referenced_table(self):
         """Test error handling for missing referenced table."""
-        orders = pd.DataFrame(
+        households = pd.DataFrame(
             {
-                "order_id": [100, 200],
-                "user_id": [1, 2],
-                "amount": [25.99, 15.50],
+                "household_id": [100, 200],
+                "person_id": [1, 2],
+                "income": [25000, 15000],
             }
         )
 
-        tables = {"orders": orders}
-        primary_keys = {"orders": "order_id"}
-        foreign_keys = {"orders": {"user_id": "missing_users"}}
+        tables = {"households": households}
+        primary_keys = {"households": "household_id"}
+        foreign_keys = {"households": {"person_id": "missing_persons"}}
 
         with pytest.raises(
-            ValueError, match="Referenced table 'missing_users' not found"
+            ValueError, match="Referenced table 'missing_persons' not found"
         ):
             normalise_table_keys(tables, primary_keys, foreign_keys)
 
@@ -298,26 +303,31 @@ class TestAutoDetectForeignKeys:
 
     def test_simple_detection(self):
         """Test basic foreign key detection."""
-        users = pd.DataFrame({"user_id": [1, 2], "name": ["Alice", "Bob"]})
-        orders = pd.DataFrame({"order_id": [100, 200], "user_id": [1, 2]})
+        persons = pd.DataFrame({"person_id": [1, 2], "name": ["Alice", "Bob"]})
+        households = pd.DataFrame(
+            {"household_id": [100, 200], "person_id": [1, 2]}
+        )
 
-        tables = {"users": users, "orders": orders}
-        primary_keys = {"users": "user_id", "orders": "order_id"}
+        tables = {"persons": persons, "households": households}
+        primary_keys = {"persons": "person_id", "households": "household_id"}
 
         result = _auto_detect_foreign_keys(tables, primary_keys)
 
-        expected = {"orders": {"user_id": "users"}}
+        expected = {"households": {"person_id": "persons"}}
         assert result == expected
 
     def test_no_foreign_keys(self):
         """Test when no foreign keys are detected."""
-        users = pd.DataFrame({"user_id": [1, 2], "name": ["Alice", "Bob"]})
-        products = pd.DataFrame(
-            {"product_id": [100, 200], "name": ["Widget", "Gadget"]}
+        persons = pd.DataFrame({"person_id": [1, 2], "name": ["Alice", "Bob"]})
+        benefit_units = pd.DataFrame(
+            {"benefit_unit_id": [100, 200], "name": ["Disability", "Family"]}
         )
 
-        tables = {"users": users, "products": products}
-        primary_keys = {"users": "user_id", "products": "product_id"}
+        tables = {"persons": persons, "benefit_units": benefit_units}
+        primary_keys = {
+            "persons": "person_id",
+            "benefit_units": "benefit_unit_id",
+        }
 
         result = _auto_detect_foreign_keys(tables, primary_keys)
 
@@ -325,28 +335,35 @@ class TestAutoDetectForeignKeys:
 
     def test_multiple_foreign_keys_detection(self):
         """Test detection of multiple foreign keys in one table."""
-        users = pd.DataFrame({"user_id": [1, 2], "name": ["Alice", "Bob"]})
-        categories = pd.DataFrame(
-            {"category_id": [10, 20], "name": ["Electronics", "Books"]}
+        persons = pd.DataFrame({"person_id": [1, 2], "name": ["Alice", "Bob"]})
+        benefit_units = pd.DataFrame(
+            {"benefit_unit_id": [10, 20], "name": ["Disability", "Family"]}
         )
-        orders = pd.DataFrame(
+        households = pd.DataFrame(
             {
-                "order_id": [100, 200],
-                "user_id": [1, 2],
-                "category_id": [10, 20],
+                "household_id": [100, 200],
+                "person_id": [1, 2],
+                "benefit_unit_id": [10, 20],
             }
         )
 
-        tables = {"users": users, "categories": categories, "orders": orders}
+        tables = {
+            "persons": persons,
+            "benefit_units": benefit_units,
+            "households": households,
+        }
         primary_keys = {
-            "users": "user_id",
-            "categories": "category_id",
-            "orders": "order_id",
+            "persons": "person_id",
+            "benefit_units": "benefit_unit_id",
+            "households": "household_id",
         }
 
         result = _auto_detect_foreign_keys(tables, primary_keys)
 
         expected = {
-            "orders": {"user_id": "users", "category_id": "categories"}
+            "households": {
+                "person_id": "persons",
+                "benefit_unit_id": "benefit_units",
+            }
         }
         assert result == expected

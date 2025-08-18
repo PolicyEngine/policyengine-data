@@ -21,32 +21,32 @@ Normalises primary and foreign keys across multiple related tables.
 import pandas as pd
 from policyengine_data import normalise_table_keys
 
-users = pd.DataFrame({
-    'user_id': [101, 105, 103],
+person = pd.DataFrame({
+    'person_id': [101, 105, 103],
     'name': ['Alice', 'Bob', 'Carol']
 })
 
-orders = pd.DataFrame({
-    'order_id': [201, 205, 207], 
-    'user_id': [105, 101, 105],
-    'amount': [25.99, 15.50, 42.00]
+household = pd.DataFrame({
+    'household_id': [201, 205, 207], 
+    'person_id': [105, 101, 105],
+    'income': [25000, 15000, 42000]
 })
 
-tables = {'users': users, 'orders': orders}
-primary_keys = {'users': 'user_id', 'orders': 'order_id'}
+tables = {'person': person, 'household': household}
+primary_keys = {'person': 'person_id', 'household': 'household_id'}
 
 # Auto-detect foreign keys
 normalised = normalise_table_keys(tables, primary_keys)
 
 # Or specify foreign keys explicitly
-foreign_keys = {'orders': {'user_id': 'users'}}
+foreign_keys = {'household': {'person_id': 'persons'}}
 normalised = normalise_table_keys(tables, primary_keys, foreign_keys)
 ```
 
 After normalisation:
-- User IDs become 0, 1, 2 (instead of 101, 105, 103)
-- Order IDs become 0, 1, 2 (instead of 201, 205, 207)  
-- Foreign key relationships are preserved (Bob's orders still reference Bob's new ID)
+- Person IDs become 0, 1, 2 (instead of 101, 105, 103)
+- Household IDs become 0, 1, 2 (instead of 201, 205, 207)  
+- Foreign key relationships are preserved (Bob's household still reference Bob's new ID)
 
 ### `normalise_single_table_keys(df, key_column, start_index=0)`
 
@@ -66,12 +66,12 @@ import pandas as pd
 from policyengine_data import normalise_single_table_keys
 
 df = pd.DataFrame({
-    'id': [101, 105, 103],
-    'value': ['A', 'B', 'C'] 
+    'person_id': [101, 105, 103],
+    'age': [25, 30, 35] 
 })
 
-normalised = normalise_single_table_keys(df, 'id')
-# Result: IDs become 0, 1, 2
+normalised = normalise_single_table_keys(df, 'person_id')
+# Result: person_ids become 0, 1, 2
 ```
 
 ## Key features
