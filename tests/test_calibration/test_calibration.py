@@ -73,9 +73,32 @@ def test_calibration_per_geographic_level_iteration():
     from policyengine_data.tools.legacy_class_conversions import (
         SingleYearDataset_to_Dataset,
     )
+    from policyengine_data.calibration.target_rescaling import (
+        download_database,
+        rescale_calibration_targets,
+    )
+    from policyengine_data.calibration.target_uprating import (
+        uprate_calibration_targets,
+    )
     from policyengine_data.calibration.calibrate import (
         calibrate_single_geography_level,
     )
+
+    db_uri = download_database()
+
+    # Rescale targets for consistency across geography areas
+    rescaling_results = rescale_calibration_targets(
+        db_uri=db_uri, update_database=True
+    )
+
+    # Uprate targets for consistency across definition year (disabled until IRS SOI variables are renamed to avoid errors)
+    # uprating_results = uprate_calibration_targets(
+    #     system=system,
+    #     db_uri=db_uri,
+    #     from_period=2022,
+    #     to_period=2023,
+    #     update_database=True,
+    # )
 
     # Calibrate the state level dataset with sparsity
     state_level_calibrated_dataset = calibrate_single_geography_level(
@@ -134,9 +157,32 @@ def test_calibration_combining_all_levels_at_once():
     from policyengine_data.tools.legacy_class_conversions import (
         SingleYearDataset_to_Dataset,
     )
+    from policyengine_data.calibration.target_rescaling import (
+        download_database,
+        rescale_calibration_targets,
+    )
+    from policyengine_data.calibration.target_uprating import (
+        uprate_calibration_targets,
+    )
     from policyengine_data.calibration.calibrate import (
         calibrate_all_levels,
     )
+
+    db_uri = download_database()
+
+    # Rescale targets for consistency across geography areas
+    rescaling_results = rescale_calibration_targets(
+        db_uri=db_uri, update_database=True
+    )
+
+    # Uprate targets for consistency across definition year (disabled until IRS SOI variables are renamed to avoid errors)
+    # uprating_results = uprate_calibration_targets(
+    #     system=system,
+    #     db_uri=db_uri,
+    #     from_period=2022,
+    #     to_period=2023,
+    #     update_database=True,
+    # )
 
     # Calibrate the full dataset at once (only passing the identifyers of the areas for which the base dataset will be stacked)
     fully_calibrated_dataset = calibrate_all_levels(

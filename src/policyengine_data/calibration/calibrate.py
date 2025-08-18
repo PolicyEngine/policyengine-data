@@ -21,6 +21,9 @@ from policyengine_data.calibration.target_rescaling import (
     download_database,
     rescale_calibration_targets,
 )
+from policyengine_data.calibration.target_uprating import (
+    uprate_calibration_targets,
+)
 from policyengine_data.calibration.utils import (
     create_geographic_normalization_factor,
 )
@@ -49,13 +52,12 @@ def calibrate_single_geography_level(
     """
     This function will calibrate the dataset for a specific geography level, defaulting to stacking the base dataset per area within it.
     It will handle conversion between dataset classes to enable:
-        1. Rescaling calibration targets.
-        2. Loading the base dataset and reassigning it to the specified geography.
-        3. Selecting the appropriate targets that match each area at the geography level.
-        4. Creating a metrics matrix that enables computing estimates for those targets.
-        5. Calibrating the dataset's household weights with regularization.
-        6. Filtering the resulting dataset to only include households with non-zero weights.
-        7. Stacking all areas at that level into a single dataset.
+        1. Loading the base dataset and reassigning it to the specified geography.
+        2. Selecting the appropriate targets that match each area at the geography level.
+        3. Creating a metrics matrix that enables computing estimates for those targets.
+        4. Calibrating the dataset's household weights with regularization.
+        5. Filtering the resulting dataset to only include households with non-zero weights.
+        6. Stacking all areas at that level into a single dataset.
 
     Args:
         microsimulation_class: The Microsimulation class to use for creating simulations.
@@ -77,11 +79,6 @@ def calibrate_single_geography_level(
     """
     if db_uri is None:
         db_uri = download_database()
-
-    # Rescale targets for consistency across geography areas
-    rescaling_results = rescale_calibration_targets(
-        db_uri=db_uri, update_database=True
-    )
 
     geography_level_calibrated_dataset = None
     for area, geo_identifier in calibration_areas.items():
@@ -256,13 +253,12 @@ def calibrate_all_levels(
     """
     This function will calibrate the dataset for all geography levels in the database, defaulting to stacking the base dataset per area within the specified level (it is recommended to use the lowest in the hierarchy for stacking). (Eg. when calibrating for district, state and national levels in the US, this function will stack the CPS dataset for each district and calibrate the stacked dataset for the three levels' targets.)
     It will handle conversion between dataset classes to enable:
-        1. Rescaling calibration targets.
-        2. Loading the base dataset and reassigning it to the geographic areas within the lowest level.
-        3. Stacking all areas at that level into a single dataset.
-        4. Selecting all targets that match the specified geography levels.
-        5. Creating a metrics matrix that enables computing estimates for those targets.
-        6. Calibrating the dataset's household weights with regularization.
-        7. Filtering the resulting dataset to only include households with non-zero weights.
+        1. Loading the base dataset and reassigning it to the geographic areas within the lowest level.
+        2. Stacking all areas at that level into a single dataset.
+        3. Selecting all targets that match the specified geography levels.
+        4. Creating a metrics matrix that enables computing estimates for those targets.
+        5. Calibrating the dataset's household weights with regularization.
+        6. Filtering the resulting dataset to only include households with non-zero weights.
 
     Args:
         microsimulation_class: The Microsimulation class to use for creating simulations.
@@ -282,11 +278,6 @@ def calibrate_all_levels(
     """
     if db_uri is None:
         db_uri = download_database()
-
-    # Rescale targets for consistency across geography areas
-    rescaling_results = rescale_calibration_targets(
-        db_uri=db_uri, update_database=True
-    )
 
     stacked_dataset = None
     for area, geo_identifier in database_stacking_areas.items():
@@ -451,6 +442,7 @@ def calibrate_all_levels(
 
 if __name__ == "__main__":
     from policyengine_us import Microsimulation
+    from policyengine_us.system import system
 
     print("US calibration example:")
 
@@ -512,10 +504,27 @@ if __name__ == "__main__":
         "Wyoming": "0400000US56",
     }
 
+    db_uri = download_database()
+
+    # Rescale targets for consistency across geography areas
+    rescaling_results = rescale_calibration_targets(
+        db_uri=db_uri, update_database=True
+    )
+
+    # Uprate targets for consistency across definition year (disabled until IRS SOI variables are renamed to avoid errors)
+    # uprating_results = uprate_calibration_targets(
+    #     system=system,
+    #     db_uri=db_uri,
+    #     from_period=2022,
+    #     to_period=2023,
+    #     update_database=True,
+    # )
+
     state_level_calibrated_dataset = calibrate_single_geography_level(
         Microsimulation,
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
+        db_uri=db_uri,
         use_dataset_weights=False,
         regularize_with_l0=True,
     )
@@ -540,6 +549,7 @@ if __name__ == "__main__":
         Microsimulation,
         areas_in_national_level,
         dataset="Dataset_state_level_age_medicaid_snap_eitc_agi_targets.h5",
+        db_uri=db_uri,
         stack_datasets=False,
         noise_level=0.0,
         use_dataset_weights=True,

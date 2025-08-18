@@ -8,4 +8,5 @@ from .metrics_matrix_creation import (
     validate_metrics_matrix,
 )
 from .target_rescaling import download_database, rescale_calibration_targets
+from .target_uprating import uprate_calibration_targets
 from .utils import create_geographic_normalization_factor
