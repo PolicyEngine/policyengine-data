@@ -165,7 +165,7 @@ def calibrate_single_geography_level(
             ),
             sparse_learning_rate=0.1,
             regularize_with_l0=regularize_with_l0,
-            csv_path=f"{area}_calibration.csv",
+            csv_path=calibration_log_path,
         )
         performance_log = calibrator.calibrate()
         optimized_sparse_weights = calibrator.sparse_weights
