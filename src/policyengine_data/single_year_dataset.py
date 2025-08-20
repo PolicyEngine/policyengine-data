@@ -112,30 +112,89 @@ class SingleYearDataset:
         simulation: "Microsimulation",
         time_period: int = 2025,
         entity_names_to_include: Optional[List[str]] = None,
+        include_all_variables: bool = False,
+        additional_variables: Optional[Dict[str, List[str]]] = None,
     ) -> "SingleYearDataset":
+        """
+        Create a SingleYearDataset from a Microsimulation.
+
+        Args:
+            simulation: The Microsimulation to extract data from
+            time_period: The time period for the data
+            entity_names_to_include: Specific entities to include (None = all)
+            include_all_variables: If True, include ALL variables (both input and calculated)
+            additional_variables: Dict mapping entity names to lists of additional variables to include beyond input variables.
+            E.g., {"person": ["employment_income"], "tax_unit": ["eitc", "adjusted_gross_income"]}
+
+        Returns:
+            SingleYearDataset with the specified variables
+        """
         entity_dfs = {}
 
-        # If no entity names specified, use all available entities
-        if entity_names_to_include is None:
+        # Determine which entities to process
+        if include_all_variables:
+            # When including all variables, get entities from all variables
+            entity_names = list(
+                set(
+                    simulation.tax_benefit_system.variables[var].entity.key
+                    for var in simulation.tax_benefit_system.variables
+                )
+            )
+        elif entity_names_to_include is not None:
+            entity_names = entity_names_to_include
+        else:
+            # Default: get entities from input variables
             entity_names = list(
                 set(
                     simulation.tax_benefit_system.variables[var].entity.key
                     for var in simulation.input_variables
                 )
             )
-        else:
-            entity_names = entity_names_to_include
 
+        # Process each entity
         for entity in entity_names:
-            input_variables = [
-                variable
-                for variable in simulation.input_variables
-                if simulation.tax_benefit_system.variables[variable].entity.key
-                == entity
-            ]
-            entity_dfs[entity] = simulation.calculate_dataframe(
-                input_variables, period=time_period
-            )
+            variables_to_include = []
+
+            if include_all_variables:
+                # Get ALL variables for this entity (already filtered by entity)
+                variables_to_include = [
+                    var_name
+                    for var_name in simulation.tax_benefit_system.variables
+                    if simulation.tax_benefit_system.variables[
+                        var_name
+                    ].entity.key
+                    == entity
+                ]
+            else:
+                # Start with input variables for this entity
+                variables_to_include = [
+                    variable
+                    for variable in simulation.input_variables
+                    if simulation.tax_benefit_system.variables[
+                        variable
+                    ].entity.key
+                    == entity
+                ]
+
+                # Add any additional specified variables for this entity
+                if additional_variables and entity in additional_variables:
+                    for var in additional_variables[entity]:
+                        # Verify the variable exists, belongs to this entity, and isn't already included
+                        if (
+                            var in simulation.tax_benefit_system.variables
+                            and simulation.tax_benefit_system.variables[
+                                var
+                            ].entity.key
+                            == entity
+                            and var not in variables_to_include
+                        ):
+                            variables_to_include.append(var)
+
+            # Calculate all variables for this entity (all should belong to the entity now)
+            if variables_to_include:
+                entity_dfs[entity] = simulation.calculate_dataframe(
+                    variables_to_include, period=time_period
+                )
 
         return SingleYearDataset(
             entities=entity_dfs,

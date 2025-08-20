@@ -10,6 +10,7 @@ import pandas as pd
 
 from policyengine_data import SingleYearDataset, normalise_table_keys
 from policyengine_data.calibration.dataset_duplication import (
+    identify_calculated_variables,
     load_dataset_for_geography_legacy,
     minimize_calibrated_dataset_legacy,
 )
@@ -81,6 +82,14 @@ def calibrate_single_geography_level(
     """
     if db_uri is None:
         db_uri = download_database()
+
+    # Identify calculated variables from the base dataset to preserve them
+    important_calculated_vars = identify_calculated_variables(
+        dataset, microsimulation_class
+    )
+    logger.info(
+        f"Identified calculated variables to preserve: {important_calculated_vars}"
+    )
 
     geography_level_calibrated_dataset = None
     for area, geo_identifier in calibration_areas.items():
@@ -156,7 +165,7 @@ def calibrate_single_geography_level(
             ),
             sparse_learning_rate=0.1,
             regularize_with_l0=regularize_with_l0,
-            csv_path=calibration_log_path,
+            csv_path=f"{area}_calibration.csv",
         )
         performance_log = calibrator.calibrate()
         optimized_sparse_weights = calibrator.sparse_weights
@@ -172,6 +181,8 @@ def calibrate_single_geography_level(
                 if regularize_with_l0
                 else optimized_weights
             ),
+            include_all_variables=False,  # Use important variables for efficiency
+            important_variables=important_calculated_vars,
         )
 
         # Detect ids that require resetting after minimization
@@ -281,6 +292,14 @@ def calibrate_all_levels(
     if db_uri is None:
         db_uri = download_database()
 
+    # Identify calculated variables from the base dataset to preserve them
+    important_calculated_vars = identify_calculated_variables(
+        dataset, microsimulation_class
+    )
+    logger.info(
+        f"Identified calculated variables to preserve: {important_calculated_vars}"
+    )
+
     stacked_dataset = None
     for area, geo_identifier in database_stacking_areas.items():
         logger.info(f"Stacking dataset for {area}...")
@@ -304,6 +323,8 @@ def calibrate_all_levels(
         single_year_dataset = SingleYearDataset.from_simulation(
             simulation=sim_data_to_stack,
             time_period=year,
+            include_all_variables=False,  # Use important variables for efficiency
+            additional_variables=important_calculated_vars,
         )
 
         # Detect ids that require resetting
@@ -437,6 +458,8 @@ def calibrate_all_levels(
             if regularize_with_l0
             else optimized_weights
         ),
+        include_all_variables=False,  # Use important variables for efficiency
+        important_variables=important_calculated_vars,
     )
 
     return fully_calibrated_dataset
@@ -513,14 +536,14 @@ if __name__ == "__main__":
         db_uri=db_uri, update_database=True
     )
 
-    # Uprate targets for consistency across definition year (disabled until IRS SOI variables are renamed to avoid errors)
-    # uprating_results = uprate_calibration_targets(
-    #     system=system,
-    #     db_uri=db_uri,
-    #     from_period=2022,
-    #     to_period=2023,
-    #     update_database=True,
-    # )
+    # Uprate targets for consistency across definition year
+    uprating_results = uprate_calibration_targets(
+        system=system,
+        db_uri=db_uri,
+        from_period=2022,
+        to_period=2023,
+        update_database=True,
+    )
 
     state_level_calibrated_dataset = calibrate_single_geography_level(
         Microsimulation,
@@ -529,6 +552,7 @@ if __name__ == "__main__":
         db_uri=db_uri,
         use_dataset_weights=False,
         regularize_with_l0=True,
+        raise_error=False,
     )
 
     state_level_weights = state_level_calibrated_dataset.entities["household"][
@@ -537,7 +561,7 @@ if __name__ == "__main__":
 
     SingleYearDataset_to_Dataset(
         state_level_calibrated_dataset,
-        output_path="Dataset_state_level_age_medicaid_snap_eitc_agi_targets.h5",
+        output_path="Dataset_state_level_Aug20.h5",
     )
 
     print("Completed calibration for state level dataset.")
@@ -550,12 +574,13 @@ if __name__ == "__main__":
     national_level_calibrated_dataset = calibrate_single_geography_level(
         Microsimulation,
         areas_in_national_level,
-        dataset="Dataset_state_level_age_medicaid_snap_eitc_agi_targets.h5",
+        dataset="Dataset_state_level_Aug20.h5",
         db_uri=db_uri,
         stack_datasets=False,
         noise_level=0.0,
         use_dataset_weights=True,
         regularize_with_l0=False,
+        raise_error=False,
     )
 
     national_level_weights = national_level_calibrated_dataset.entities[
@@ -564,7 +589,7 @@ if __name__ == "__main__":
 
     SingleYearDataset_to_Dataset(
         national_level_calibrated_dataset,
-        output_path="Dataset_national_level_age_medicaid_snap_eitc_agi_targets.h5",
+        output_path="Dataset_national_level_Aug20.h5",
     )
 
     print("Completed calibration for national level dataset.")
