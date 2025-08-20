@@ -13,8 +13,9 @@ import h5py
 import numpy as np
 import pandas as pd
 import requests
-from policyengine_core.tools.hugging_face import *
-from policyengine_core.tools.win_file_manager import WindowsAtomicFileManager
+
+from policyengine_data.tools.hugging_face import *
+from policyengine_data.tools.win_file_manager import WindowsAtomicFileManager
 
 
 def atomic_write(file: Path, content: bytes) -> None:

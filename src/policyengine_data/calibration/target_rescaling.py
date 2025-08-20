@@ -14,7 +14,7 @@ Database connection and structure functions
 
 def download_database(
     filename: Optional[str] = "policy_data.db",
-    repo_id: Optional[str] = "policyengine/test",
+    repo_id: Optional[str] = "policyengine/policyengine-us-data",
 ) -> create_engine:
     """
     Download the SQLite database from Hugging Face Hub and return the connection string.
@@ -35,8 +35,9 @@ def download_database(
         downloaded_path = hf_hub_download(
             repo_id=repo_id,
             filename=filename,
-            local_dir=".",  # Use "." for the current working directory
+            local_dir="download/",
             local_dir_use_symlinks=False,  # Recommended to avoid symlinks
+            force_download=True,  # Always download, ignore cache
         )
         path = os.path.abspath(downloaded_path)
         logger.info(f"File downloaded successfully to: {path}")

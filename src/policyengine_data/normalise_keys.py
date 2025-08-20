@@ -15,7 +15,7 @@ def normalise_table_keys(
     tables: Dict[str, pd.DataFrame],
     primary_keys: Dict[str, str],
     foreign_keys: Optional[Dict[str, Dict[str, str]]] = None,
-    start_index: Optional[int] = 0,
+    start_index: Optional[Dict[str, int]] = None,
 ) -> Dict[str, pd.DataFrame]:
     """
     Normalise primary and foreign keys across multiple tables to zero-based indices.
@@ -31,7 +31,7 @@ def normalise_table_keys(
                      relationships. Format: {table_name: {fk_column: referenced_table}}
                      If None, foreign keys will be auto-detected based on column names
                      matching primary key names from other tables.
-        start_index: Starting index for normalisation (default: 0).
+        start_index: Dictionary mapping table names to their starting index for normalisation (default: 0).
 
     Returns:
         Dictionary of normalised tables with `start_index`-based integer keys
@@ -56,6 +56,9 @@ def normalise_table_keys(
     if not tables:
         return {}
 
+    if not start_index:
+        start_index = {}
+
     if foreign_keys is None:
         foreign_keys = _auto_detect_foreign_keys(tables, primary_keys)
 
@@ -79,8 +82,10 @@ def normalise_table_keys(
         # Get unique values and create zero-based mapping
         unique_keys = df[pk_column].unique()
         key_mappings[table_name] = {
-            old_key: new_key + start_index
-            for new_key, old_key in enumerate(unique_keys)
+            old_key: new_key
+            for new_key, old_key in enumerate(
+                unique_keys, start=start_index.get(table_name, 0)
+            )
         }
 
     # Second pass: apply mappings to all tables
