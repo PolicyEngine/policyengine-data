@@ -32,7 +32,7 @@ dev = [
     "build",
     "linecheck",
     "yaml-changelog>=0.1.7",
-    "policyengine-us>=1.366.0",
+    "policyengine-us==1.370.1",
 ]
 
 docs = [
