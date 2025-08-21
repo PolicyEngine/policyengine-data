@@ -6,14 +6,14 @@ readme = "README.md"
 authors = [
     {name = "PolicyEngine", email = "hello@policyengine.org"},
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "h5py",
     "numpy",
     "pandas",
     "huggingface_hub>=0.25.1",
-    "tables",
-    "policyengine-core>=3.6.4",
+    "tables>=3.10.2",
+    "policyengine-core>=3.20.0",
     "policyengine-us", # remove as soon as we fix UCGID
     "microdf-python",
     "microcalibrate",
@@ -69,7 +69,7 @@ line_length = 79
 
 [tool.black]
 line-length = 79
-target-version = ["py311"]
+target-version = ["py313"]
 
 [project.scripts]
 policyengine-data = "policyengine_data:main"
