@@ -46,6 +46,7 @@ def calibrate_single_geography_level(
     year: Optional[int] = 2023,
     db_uri: Optional[str] = None,
     noise_level: Optional[float] = 10.0,
+    epochs: Optional[int] = 600,
     use_dataset_weights: Optional[bool] = True,
     regularize_with_l0: Optional[bool] = False,
     calibration_log_path: Optional[str] = None,
@@ -72,6 +73,7 @@ def calibrate_single_geography_level(
         geo_sim_filter_variable (str): The variable used to filter the simulation by geography. Default in the US: "ucgid".
         db_uri (Optional[str]): The URI of the database to use for rescaling targets. If None, it will download the database from the default URI.
         noise_level (Optional[float]): The level of noise to apply during calibration. Default: 10.0.
+        epochs (Optional[int]): The number of training epochs to use for calibration. Default: 600.
         use_dataset_weights (Optional[bool]): Whether to use original dataset weights as the starting weights for calibration. Default: True.
         regularize_with_l0 (Optional[bool]): Whether to use L0 regularization during calibration. Default: False.
         calibration_log_path (Optional[str]): The path to the calibration log file. If None, calibration log CSVs will not be saved.
@@ -157,7 +159,7 @@ def calibrate_single_geography_level(
             targets=targets,
             target_names=target_names,
             estimate_matrix=metrics_matrix,
-            epochs=600,
+            epochs=epochs,
             learning_rate=0.2,
             noise_level=noise_level,
             excluded_targets=(
@@ -260,6 +262,7 @@ def calibrate_all_levels(
     year: Optional[int] = 2023,
     db_uri: Optional[str] = None,
     noise_level: Optional[float] = 10.0,
+    epochs: Optional[int] = 600,
     regularize_with_l0: Optional[bool] = False,
     raise_error: Optional[bool] = True,
 ) -> "SingleYearDataset":
@@ -283,6 +286,7 @@ def calibrate_all_levels(
         year (Optional[int]): The year to use for calibration. Default: 2023.
         db_uri (Optional[str]): The database URI to use for calibration. If None, it will download the database from the default URI.
         noise_level (Optional[float]): The noise level to use for calibration. Default: 10.0.
+        epochs (Optional[int]): The number of training epochs to use for calibration. Default: 600.
         regularize_with_l0 (Optional[bool]): Whether to use L0 regularization for calibration. Default: False.
         raise_error (Optional[bool]): Whether to raise an error if matrix creation fails. Default: True.
 
@@ -429,7 +433,7 @@ def calibrate_all_levels(
         targets=targets,
         target_names=target_names,
         estimate_matrix=metrics_matrix,
-        epochs=600,
+        epochs=epochs,
         learning_rate=0.2,
         noise_level=noise_level,
         excluded_targets=(
