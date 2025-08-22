@@ -377,6 +377,7 @@ Data integrity check: True
 </section>
 <section id="method-3-from-a-policyengine-microsimulation">
 <h4>Method 3: From a PolicyEngine MicroSimulation<a class="headerlink" href="#method-3-from-a-policyengine-microsimulation" title="Link to this heading">¶</a></h4>
+<p>Note that, by default, the <code class="docutils literal notranslate"><span class="pre">from_simulation()</span></code> method only loads input variables, which come from the underlying dataset. This may create problems later on if when trying to calculate specific variables using the loaded SingleYearDataset without running the whole microsimulation. The <code class="docutils literal notranslate"><span class="pre">include_all_variables</span></code> parameter, when set to <code class="docutils literal notranslate"><span class="pre">True</span></code> will calculate all variables in the microsimulation object when loading the SingleYearDataset to avoid problems down the line. However, this is quite computationally heavy. Instead, the parameter <code class="docutils literal notranslate"><span class="pre">additional_variables</span></code> enables passing a dictionary of specific “calculated” variables to be loaded, avoiding computing variables that will not be needed.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">policyengine_us</span><span class="w"> </span><span class="kn">import</span> <span class="n">Microsimulation</span>
@@ -386,7 +387,12 @@ Data integrity check: True
 
 <span class="n">sim</span> <span class="o">=</span> <span class="n">Microsimulation</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
 
-<span class="n">single_year_dataset</span> <span class="o">=</span> <span class="n">SingleYearDataset</span><span class="o">.</span><span class="n">from_simulation</span><span class="p">(</span><span class="n">sim</span><span class="p">,</span> <span class="n">time_period</span><span class="o">=</span><span class="n">start_year</span><span class="p">)</span>
+<span class="n">single_year_dataset</span> <span class="o">=</span> <span class="n">SingleYearDataset</span><span class="o">.</span><span class="n">from_simulation</span><span class="p">(</span>
+    <span class="n">sim</span><span class="p">,</span> 
+    <span class="n">time_period</span><span class="o">=</span><span class="n">start_year</span><span class="p">,</span>
+    <span class="n">include_all_variables</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">additional_variables</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;person&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;employment_income&quot;</span><span class="p">]},</span>
+<span class="p">)</span>
 <span class="n">single_year_dataset</span><span class="o">.</span><span class="n">time_period</span> <span class="o">=</span> <span class="n">start_year</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dataset created from PolicyEngine US microdata stored in </span><span class="si">{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -395,6 +401,9 @@ Data integrity check: True
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>TEST_LITE == False
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Dataset created from PolicyEngine US microdata stored in hf://policyengine/policyengine-us-data/cps_2023.h5
 Dataset created for time period: 2023
 </pre></div>
