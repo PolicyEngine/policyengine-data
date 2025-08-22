@@ -28,3 +28,9 @@
     - Logic to calibrate for multiple geographic levels with two different routines.
     - Calibration documentation.
   date: 2025-08-20 08:27:42
+- bump: patch
+  changes:
+    fixed:
+    - Logic to add calculated variables (not input variables) to SingleYearDataset
+      when loading from a microsim.
+  date: 2025-08-22 10:20:56
