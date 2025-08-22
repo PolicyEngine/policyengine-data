@@ -14,6 +14,57 @@ Functions using the legacy Dataset class to operate datasets given their depende
 """
 
 
+def identify_calculated_variables(
+    dataset_path: str,
+    microsimulation_class,
+) -> dict:
+    """
+    Identify calculated variables in a dataset by comparing with input variables. "Input" variables come from the underlying dataset. "Calculated" variables come from simulation formulas in one of the country-specific packages.
+
+    Args:
+        dataset_path: Path to the dataset file (e.g., "cps_2023.h5")
+        microsimulation_class: The Microsimulation class to get input variables from
+
+    Returns:
+        Dict mapping entity names to lists of calculated variables in the dataset
+        E.g., {"person": ["employment_income", "self_employment_income"], ...}
+    """
+    import h5py
+
+    # Load microsimulation to get input variables
+    sim = microsimulation_class(dataset=dataset_path)
+    input_vars = set(sim.input_variables)
+
+    # Get all variables from the dataset file
+    calculated_by_entity = {}
+
+    # Handle HuggingFace URLs by using the sim's loaded dataset
+    if dataset_path.startswith("hf://"):
+        # Get the actual file path from the simulation's dataset
+        actual_path = sim.dataset.file_path
+    else:
+        actual_path = dataset_path
+
+    with h5py.File(actual_path, "r") as f:
+        dataset_variables = set(f.keys())
+        # Find calculated variables (in dataset but not input variables)
+        calculated_vars = dataset_variables - input_vars
+
+        # Organize by entity
+        for var in calculated_vars:
+            if var in sim.tax_benefit_system.variables:
+                entity = sim.tax_benefit_system.variables[var].entity.key
+                if entity not in calculated_by_entity:
+                    calculated_by_entity[entity] = []
+                calculated_by_entity[entity].append(var)
+
+    # Sort variables within each entity for consistency
+    for entity in calculated_by_entity:
+        calculated_by_entity[entity].sort()
+
+    return calculated_by_entity
+
+
 def load_dataset_for_geography_legacy(
     microsimulation_class,
     year: Optional[int] = 2023,
@@ -92,7 +143,12 @@ def load_dataset_for_geography_legacy(
 
 
 def minimize_calibrated_dataset_legacy(
-    microsimulation_class, sim, year: int, optimized_weights: pd.Series
+    microsimulation_class,
+    sim,
+    year: int,
+    optimized_weights: pd.Series,
+    include_all_variables: bool = False,
+    important_variables: list = None,
 ) -> "SingleYearDataset":
     """
     Use sparse weights to minimize the calibrated dataset storing in the legacy Dataset class.
@@ -102,6 +158,8 @@ def minimize_calibrated_dataset_legacy(
         sim: The Microsimulation object with the dataset to minimize.
         year (int): Year the dataset is representing.
         optimized_weights (pd.Series): The calibrated, regularized weights used to minimize the dataset.
+        include_all_variables (bool): If True, include ALL variables (both input and calculated). If False, include only input variables plus important calculated ones from important_variables if not None.
+        important_variables (list): List of important calculated variables to include if include_all_variables is False.
 
     Returns:
         SingleYearDataset: The regularized dataset
@@ -162,7 +220,13 @@ def minimize_calibrated_dataset_legacy(
     sim.default_input_period = year
     sim.build_from_dataset()
 
-    single_year_dataset = SingleYearDataset.from_simulation(sim, year)
+    # Create SingleYearDataset using the from_simulation method
+    single_year_dataset = SingleYearDataset.from_simulation(
+        sim,
+        year,
+        include_all_variables=include_all_variables,
+        additional_variables=important_variables,
+    )
 
     return single_year_dataset
 

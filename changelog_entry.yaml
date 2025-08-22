@@ -1,0 +1,4 @@
+- bump: patch
+  changes:
+    fixed:
+      - Logic to add calculated variables (not input variables) to SingleYearDataset when loading from a microsim.

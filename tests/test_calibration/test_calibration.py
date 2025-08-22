@@ -2,8 +2,6 @@
 Test the calibration logic for different geographic levels that integrates all other calibration pipeline components.
 """
 
-import pytest
-
 areas_in_national_level = {
     "United States": "0100000US",
 }
@@ -70,6 +68,7 @@ def test_calibration_per_geographic_level_iteration():
     Conversion between dataset class types is necessary until full migration to the new SingleYearDataset class in the policyengine_core repository.
     """
     from policyengine_us import Microsimulation
+    from policyengine_us.system import system
     from policyengine_data.tools.legacy_class_conversions import (
         SingleYearDataset_to_Dataset,
     )
@@ -91,14 +90,14 @@ def test_calibration_per_geographic_level_iteration():
         db_uri=db_uri, update_database=True
     )
 
-    # Uprate targets for consistency across definition year (disabled until IRS SOI variables are renamed to avoid errors)
-    # uprating_results = uprate_calibration_targets(
-    #     system=system,
-    #     db_uri=db_uri,
-    #     from_period=2022,
-    #     to_period=2023,
-    #     update_database=True,
-    # )
+    # Uprate targets for consistency across definition year
+    uprating_results = uprate_calibration_targets(
+        system=system,
+        db_uri=db_uri,
+        from_period=2022,
+        to_period=2023,
+        update_database=True,
+    )
 
     # Calibrate the state level dataset with sparsity
     state_level_calibrated_dataset = calibrate_single_geography_level(
@@ -106,6 +105,7 @@ def test_calibration_per_geographic_level_iteration():
         areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
         dataset_subsample_size=1000,  # approximately 5% of the base dataset to decrease computation costs
+        epochs=300,
         use_dataset_weights=False,
         regularize_with_l0=True,
     )
@@ -125,6 +125,7 @@ def test_calibration_per_geographic_level_iteration():
         dataset="Dataset_state_level.h5",
         stack_datasets=False,
         noise_level=0.0,
+        epochs=300,
         use_dataset_weights=True,  # use the previously calibrated weights
         regularize_with_l0=False,
     )
@@ -144,7 +145,7 @@ def test_calibration_per_geographic_level_iteration():
 
     assert (
         state_level_weights - national_level_weights
-    ).sum() > 0, "Household weights do not differ between state and national levels, suggesting national calibration was unsucessful."
+    ).sum() != 0, "Household weights do not differ between state and national levels, suggesting national calibration was unsucessful."
 
 
 def test_calibration_combining_all_levels_at_once():
@@ -154,6 +155,7 @@ def test_calibration_combining_all_levels_at_once():
     Conversion between dataset class types is necessary until full migration to the new SingleYearDataset class in the policyengine_core repository.
     """
     from policyengine_us import Microsimulation
+    from policyengine_us.system import system
     from policyengine_data.tools.legacy_class_conversions import (
         SingleYearDataset_to_Dataset,
     )
@@ -175,14 +177,14 @@ def test_calibration_combining_all_levels_at_once():
         db_uri=db_uri, update_database=True
     )
 
-    # Uprate targets for consistency across definition year (disabled until IRS SOI variables are renamed to avoid errors)
-    # uprating_results = uprate_calibration_targets(
-    #     system=system,
-    #     db_uri=db_uri,
-    #     from_period=2022,
-    #     to_period=2023,
-    #     update_database=True,
-    # )
+    # Uprate targets for consistency across definition year
+    uprating_results = uprate_calibration_targets(
+        system=system,
+        db_uri=db_uri,
+        from_period=2022,
+        to_period=2023,
+        update_database=True,
+    )
 
     # Calibrate the full dataset at once (only passing the identifyers of the areas for which the base dataset will be stacked)
     fully_calibrated_dataset = calibrate_all_levels(
@@ -191,6 +193,7 @@ def test_calibration_combining_all_levels_at_once():
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
         geo_hierarchy=["0100000US", "0400000US"],
         dataset_subsample_size=1000,
+        epochs=300,
         regularize_with_l0=True,
         raise_error=False,  # this will avoid raising an error if some targets have no records contributing to them (given sampling)
     )
