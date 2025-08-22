@@ -19,7 +19,7 @@ def identify_calculated_variables(
     microsimulation_class,
 ) -> dict:
     """
-    Identify calculated variables in a dataset by comparing with input variables.
+    Identify calculated variables in a dataset by comparing with input variables. "Input" variables come from the underlying dataset. "Calculated" variables come from simulation formulas in one of the country-specific packages.
 
     Args:
         dataset_path: Path to the dataset file (e.g., "cps_2023.h5")
