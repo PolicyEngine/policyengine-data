@@ -1,0 +1,4 @@
+- bump: patch
+  changes:
+    changed:
+      - Versioning workflow now mints a GitHub App token instead of using the expired POLICYENGINE_GITHUB PAT.
