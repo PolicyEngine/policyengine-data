@@ -34,3 +34,9 @@
     - Logic to add calculated variables (not input variables) to SingleYearDataset
       when loading from a microsim.
   date: 2025-08-22 10:20:56
+- bump: patch
+  changes:
+    changed:
+    - Versioning workflow now mints a GitHub App token instead of using the expired
+      POLICYENGINE_GITHUB PAT.
+  date: 2026-04-17 23:50:09
