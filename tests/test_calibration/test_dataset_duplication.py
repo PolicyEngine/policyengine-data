@@ -2,9 +2,7 @@
 Test the logic for assigning a dataset to a geographic level and minimizing it.
 """
 
-from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
-    UCGID,
-)
+from policyengine_data.calibration.ucgid import UCGID
 from policyengine_data import SingleYearDataset
 
 
