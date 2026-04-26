@@ -321,13 +321,11 @@ def update_targets_in_db(engine, updates: List[Dict]) -> int:
 
     with engine.begin() as conn:
         for update in updates:
-            query = text(
-                """
+            query = text("""
                 UPDATE targets
                 SET value = :reescaled_value
                 WHERE target_id = :target_id
-            """
-            )
+            """)
             conn.execute(query, update)
 
     return len(updates)
