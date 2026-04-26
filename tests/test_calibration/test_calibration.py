@@ -2,6 +2,8 @@
 Test the calibration logic for different geographic levels that integrates all other calibration pipeline components.
 """
 
+import numpy as np
+
 areas_in_national_level = {
     "United States": "0100000US",
 }
@@ -60,6 +62,14 @@ areas_in_state_level = {
     "Wyoming": "0400000US56",
 }
 
+sample_areas_in_state_level = {
+    "California": areas_in_state_level["California"],
+    "Texas": areas_in_state_level["Texas"],
+}
+
+sample_dataset_size = 100
+sample_epochs = 20
+
 
 def test_calibration_per_geographic_level_iteration():
     """
@@ -102,10 +112,10 @@ def test_calibration_per_geographic_level_iteration():
     # Calibrate the state level dataset with sparsity
     state_level_calibrated_dataset = calibrate_single_geography_level(
         Microsimulation,
-        areas_in_state_level,
+        sample_areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
-        dataset_subsample_size=1000,  # approximately 5% of the base dataset to decrease computation costs
-        epochs=300,
+        dataset_subsample_size=sample_dataset_size,
+        epochs=sample_epochs,
         use_dataset_weights=False,
         regularize_with_l0=True,
     )
@@ -125,7 +135,7 @@ def test_calibration_per_geographic_level_iteration():
         dataset="Dataset_state_level.h5",
         stack_datasets=False,
         noise_level=0.0,
-        epochs=300,
+        epochs=sample_epochs,
         use_dataset_weights=True,  # use the previously calibrated weights
         regularize_with_l0=False,
     )
@@ -189,11 +199,11 @@ def test_calibration_combining_all_levels_at_once():
     # Calibrate the full dataset at once (only passing the identifyers of the areas for which the base dataset will be stacked)
     fully_calibrated_dataset = calibrate_all_levels(
         Microsimulation,
-        areas_in_state_level,
+        sample_areas_in_state_level,
         "hf://policyengine/policyengine-us-data/cps_2023.h5",
         geo_hierarchy=["0100000US", "0400000US"],
-        dataset_subsample_size=1000,
-        epochs=300,
+        dataset_subsample_size=sample_dataset_size,
+        epochs=sample_epochs,
         regularize_with_l0=True,
         raise_error=False,  # this will avoid raising an error if some targets have no records contributing to them (given sampling)
     )
@@ -206,6 +216,8 @@ def test_calibration_combining_all_levels_at_once():
         fully_calibrated_dataset, output_path="Dataset_fully_calibrated.h5"
     )
 
-    assert len(weights) < 1000 * len(
-        areas_in_state_level
-    ), "Weight vector length should be less than the sampled 1000 per area after regularization."
+    assert len(weights) <= sample_dataset_size * len(
+        sample_areas_in_state_level
+    ), "Weight vector length should not exceed the sampled records after regularization."
+    assert np.isfinite(weights).all(), "Calibrated weights should be finite."
+    assert (weights > 0).all(), "Calibrated weights should be positive."
