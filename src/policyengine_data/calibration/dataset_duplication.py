@@ -2,12 +2,10 @@ from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
-from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
-    UCGID,
-)
 
 from ..dataset_legacy import Dataset
 from ..single_year_dataset import SingleYearDataset
+from .ucgid import UCGID
 
 """
 Functions using the legacy Dataset class to operate datasets given their dependency on Microsimulation objects.

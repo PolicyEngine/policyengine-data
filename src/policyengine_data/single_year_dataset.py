@@ -192,9 +192,23 @@ class SingleYearDataset:
 
             # Calculate all variables for this entity (all should belong to the entity now)
             if variables_to_include:
-                entity_dfs[entity] = simulation.calculate_dataframe(
-                    variables_to_include, period=time_period
-                )
+                try:
+                    entity_dfs[entity] = simulation.calculate_dataframe(
+                        variables_to_include, period=time_period
+                    )
+                except Exception:
+                    variable_dfs = []
+                    for variable in variables_to_include:
+                        try:
+                            variable_dfs.append(
+                                simulation.calculate_dataframe(
+                                    [variable], period=time_period
+                                )
+                            )
+                        except Exception:
+                            continue
+                    if variable_dfs:
+                        entity_dfs[entity] = pd.concat(variable_dfs, axis=1)
 
         return SingleYearDataset(
             entities=entity_dfs,

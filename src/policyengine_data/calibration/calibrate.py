@@ -100,9 +100,7 @@ def calibrate_single_geography_level(
         if stack_datasets:
             # Load dataset configured for the specific geography first
             # TODO: move away from hardcoding UCGID for geographic identification once -us is updated
-            from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
-                UCGID,
-            )
+            from policyengine_data.calibration.ucgid import UCGID
 
             sim_data_to_calibrate = load_dataset_for_geography_legacy(
                 microsimulation_class=microsimulation_class,
@@ -309,9 +307,7 @@ def calibrate_all_levels(
         logger.info(f"Stacking dataset for {area}...")
 
         # Load dataset configured for the specific geographic area
-        from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
-            UCGID,
-        )
+        from policyengine_data.calibration.ucgid import UCGID
 
         sim_data_to_stack = load_dataset_for_geography_legacy(
             microsimulation_class=microsimulation_class,
