@@ -4,6 +4,8 @@ from typing import Dict, List, Optional
 import pandas as pd
 from sqlalchemy import create_engine, text
 
+from .database_schema import ensure_calibration_schema
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +28,8 @@ def fetch_targets(
     Returns:
         DataFrame with target data joined with stratum information
     """
+    ensure_calibration_schema(engine)
+
     query = """
     SELECT 
         t.target_id,

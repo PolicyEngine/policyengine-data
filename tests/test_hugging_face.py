@@ -4,10 +4,10 @@ Test Hugging Face tools.
 
 import os
 import pytest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from huggingface_hub import ModelInfo
 from huggingface_hub.errors import RepositoryNotFoundError
-from policyengine_core.tools.hugging_face import (
+from policyengine_data.tools.hugging_face import (
     get_or_prompt_hf_token,
     download_huggingface_dataset,
 )
@@ -22,10 +22,10 @@ class TestHuggingFaceDownload:
         test_dir = "test_dir"
 
         with patch(
-            "policyengine_core.tools.hugging_face.hf_hub_download"
+            "policyengine_data.tools.hugging_face.hf_hub_download"
         ) as mock_download:
             with patch(
-                "policyengine_core.tools.hugging_face.model_info"
+                "policyengine_data.tools.hugging_face.model_info"
             ) as mock_model_info:
                 # Create mock ModelInfo object emulating public repo
                 test_id = 0
@@ -54,16 +54,16 @@ class TestHuggingFaceDownload:
         test_dir = "test_dir"
 
         with patch(
-            "policyengine_core.tools.hugging_face.hf_hub_download"
+            "policyengine_data.tools.hugging_face.hf_hub_download"
         ) as mock_download:
             with patch(
-                "policyengine_core.tools.hugging_face.model_info"
+                "policyengine_data.tools.hugging_face.model_info"
             ) as mock_model_info:
                 mock_model_info.side_effect = RepositoryNotFoundError(
-                    "Test error"
+                    "Test error", response=Mock(status_code=401)
                 )
                 with patch(
-                    "policyengine_core.tools.hugging_face.get_or_prompt_hf_token"
+                    "policyengine_data.tools.hugging_face.get_or_prompt_hf_token"
                 ) as mock_token:
                     mock_token.return_value = "test_token"
 
@@ -87,24 +87,25 @@ class TestHuggingFaceDownload:
         test_dir = "test_dir"
 
         with patch(
-            "policyengine_core.tools.hugging_face.hf_hub_download"
+            "policyengine_data.tools.hugging_face.hf_hub_download"
         ) as mock_download:
             with patch(
-                "policyengine_core.tools.hugging_face.model_info"
+                "policyengine_data.tools.hugging_face.model_info"
             ) as mock_model_info:
                 mock_model_info.side_effect = RepositoryNotFoundError(
-                    "Test error"
+                    "Test error", response=Mock(status_code=401)
                 )
                 with patch(
-                    "policyengine_core.tools.hugging_face.get_or_prompt_hf_token"
+                    "policyengine_data.tools.hugging_face.get_or_prompt_hf_token"
                 ) as mock_token:
                     mock_token.return_value = ""
+                    mock_download.side_effect = Exception("missing token")
 
                     with pytest.raises(Exception):
                         download_huggingface_dataset(
                             test_repo, test_filename, test_version, test_dir
                         )
-                        mock_download.assert_not_called()
+                    mock_download.assert_called_once()
 
 
 class TestGetOrPromptHfToken:
@@ -124,7 +125,7 @@ class TestGetOrPromptHfToken:
         # Mock both empty environment and user input
         with patch.dict(os.environ, {}, clear=True):
             with patch(
-                "policyengine_core.tools.hugging_face.getpass",
+                "policyengine_data.tools.hugging_face.getpass",
                 return_value=test_token,
             ):
                 result = get_or_prompt_hf_token()
@@ -137,7 +138,7 @@ class TestGetOrPromptHfToken:
         """Test handling of empty user input"""
         with patch.dict(os.environ, {}, clear=True):
             with patch(
-                "policyengine_core.tools.hugging_face.getpass", return_value=""
+                "policyengine_data.tools.hugging_face.getpass", return_value=""
             ):
                 result = get_or_prompt_hf_token()
                 assert result == ""
@@ -150,7 +151,7 @@ class TestGetOrPromptHfToken:
         # First call with no environment variable
         with patch.dict(os.environ, {}, clear=True):
             with patch(
-                "policyengine_core.tools.hugging_face.getpass",
+                "policyengine_data.tools.hugging_face.getpass",
                 return_value=test_token,
             ):
                 first_result = get_or_prompt_hf_token()

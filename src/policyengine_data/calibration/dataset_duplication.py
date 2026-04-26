@@ -130,12 +130,13 @@ def load_dataset_for_geography_legacy(
             sim.default_input_period = year
             sim.build_from_dataset()
 
-    hhs = len(sim.calculate("household_id").values)
-    geo_values = [geography_identifier] * hhs
-    sim.set_input(geography_variable, year, geo_values)
+    if geography_variable in sim.tax_benefit_system.variables:
+        hhs = len(sim.calculate("household_id").values)
+        geo_values = [geography_identifier] * hhs
+        sim.set_input(geography_variable, year, geo_values)
 
-    ucgid_values = sim.calculate(geography_variable).values
-    assert all(val == geography_identifier.name for val in ucgid_values)
+        ucgid_values = sim.calculate(geography_variable).values
+        assert all(val == geography_identifier.name for val in ucgid_values)
 
     return sim
 
