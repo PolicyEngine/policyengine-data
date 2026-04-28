@@ -4,6 +4,8 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from sqlalchemy import create_engine, text
 
+from .database_schema import ensure_calibration_schema
+
 logger = logging.getLogger(__name__)
 
 
@@ -62,6 +64,8 @@ def fetch_targets(
     Returns:
         DataFrame with target data joined with stratum information
     """
+    ensure_calibration_schema(engine)
+
     query = """
     SELECT 
         t.target_id,
@@ -102,6 +106,8 @@ def fetch_all_targets(engine: create_engine) -> pd.DataFrame:
     Returns:
         DataFrame with all target data joined with stratum information
     """
+    ensure_calibration_schema(engine)
+
     query = """
     SELECT 
         t.target_id,
@@ -321,13 +327,11 @@ def update_targets_in_db(engine, updates: List[Dict]) -> int:
 
     with engine.begin() as conn:
         for update in updates:
-            query = text(
-                """
+            query = text("""
                 UPDATE targets
                 SET value = :reescaled_value
                 WHERE target_id = :target_id
-            """
-            )
+            """)
             conn.execute(query, update)
 
     return len(updates)

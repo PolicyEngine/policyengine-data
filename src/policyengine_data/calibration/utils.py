@@ -2,7 +2,7 @@
 Additional utilities for the calibration process.
 """
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import numpy as np
 import torch
@@ -11,7 +11,7 @@ import torch
 def create_geographic_normalization_factor(
     geo_hierarchy: List[str],
     target_info: Dict[int, Dict[str, any]],
-) -> torch.Tensor:
+) -> Optional[torch.Tensor]:
     """
     Create a normalization factor for the calibration process to balance targets that belong to different geographic areas or concepts.
 
@@ -64,10 +64,9 @@ def create_geographic_normalization_factor(
         if is_target_active and geo_codes[i] is not None:
             active_geo_levels.add(geo_codes[i])
 
-    # If no matching geo codes for active targets, return zeros for active targets
+    # If no matching geo codes for active targets, skip geographic weighting.
     if len(active_geo_levels) == 0:
-        active_factors = torch.zeros(sum(is_active.bool()))
-        return active_factors
+        return None
 
     # If only one geographic level is present, return tensor of ones for active targets
     if len(active_geo_levels) <= 1:

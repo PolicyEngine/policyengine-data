@@ -2,9 +2,7 @@
 Test the logic for assigning a dataset to a geographic level and minimizing it.
 """
 
-from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
-    UCGID,
-)
+from policyengine_data.calibration.ucgid import UCGID
 from policyengine_data import SingleYearDataset
 
 
@@ -24,6 +22,9 @@ def test_dataset_assignment_to_geography() -> None:
     assert len(household_ids) > 0
 
     # Verify geography is set correctly
+    if "ucgid" not in sim.tax_benefit_system.variables:
+        return
+
     ucgid_values = sim.calculate("ucgid").values
     expected_ucgid = UCGID("0100000US")
     # The system returns enum names as strings, so compare with the name
@@ -139,6 +140,9 @@ def test_dataset_subsampling() -> None:
 
     # Verify geography is still set correctly after subsampling
     expected_ucgid = UCGID("0100000US")
+    if "ucgid" not in sim_subsampled.tax_benefit_system.variables:
+        return
+
     ucgid_values = sim_subsampled.calculate("ucgid").values
     assert all(val == expected_ucgid.name for val in ucgid_values)
 

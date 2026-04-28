@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
 
+from .database_schema import ensure_calibration_schema
 from .target_rescaling import download_database
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,8 @@ def fetch_targets_from_database(
     Returns:
         DataFrame with target data including target_id, variable, value, etc.
     """
+    ensure_calibration_schema(engine)
+
     # Base query
     query = """
     SELECT 
@@ -56,7 +59,18 @@ def fetch_targets_from_database(
     params = {"period": time_period, "reform_id": reform_id}
 
     # Add stratum filtering if specified
-    if all(
+    if stratum_filter_variable == "__national__":
+        query += """
+      AND t.stratum_id NOT IN (
+          SELECT sc.stratum_id
+          FROM stratum_constraints sc
+          WHERE sc.constraint_variable IN (
+              'state_fips',
+              'congressional_district_geoid'
+          )
+      )
+        """
+    elif all(
         [
             stratum_filter_variable,
             stratum_filter_value,
@@ -83,7 +97,29 @@ def fetch_targets_from_database(
 
     query += " ORDER BY t.target_id"
 
-    return pd.read_sql(query, engine, params=params)
+    result = pd.read_sql(query, engine, params=params)
+
+    if result.empty and stratum_filter_variable == "ucgid_str":
+        if stratum_filter_value.startswith("0400000US"):
+            return fetch_targets_from_database(
+                engine=engine,
+                time_period=time_period,
+                reform_id=reform_id,
+                stratum_filter_variable="state_fips",
+                stratum_filter_value=stratum_filter_value[-2:],
+                stratum_filter_operation="==",
+            )
+        if stratum_filter_value == "0100000US":
+            return fetch_targets_from_database(
+                engine=engine,
+                time_period=time_period,
+                reform_id=reform_id,
+                stratum_filter_variable="__national__",
+                stratum_filter_value=stratum_filter_value,
+                stratum_filter_operation="==",
+            )
+
+    return result
 
 
 def fetch_stratum_constraints(engine, stratum_id: int) -> pd.DataFrame:
@@ -158,12 +194,19 @@ def apply_single_constraint(
     """
     operations = {
         "equals": lambda v, cv: v == cv,
+        "=": lambda v, cv: v == cv,
+        "==": lambda v, cv: v == cv,
         "is_greater_than": lambda v, cv: v > cv,
         "greater_than": lambda v, cv: v > cv,
+        ">": lambda v, cv: v > cv,
         "greater_than_or_equal": lambda v, cv: v >= cv,
+        ">=": lambda v, cv: v >= cv,
         "less_than": lambda v, cv: v < cv,
+        "<": lambda v, cv: v < cv,
         "less_than_or_equal": lambda v, cv: v <= cv,
+        "<=": lambda v, cv: v <= cv,
         "not_equals": lambda v, cv: v != cv,
+        "!=": lambda v, cv: v != cv,
     }
 
     # "in" operation - check if constraint value is contained in string values
@@ -321,12 +364,19 @@ def parse_constraint_for_name(constraint: pd.Series) -> str:
     # Map operations to symbols for readability
     op_symbols = {
         "equals": "=",
+        "=": "=",
+        "==": "=",
         "is_greater_than": ">",
         "greater_than": ">",
+        ">": ">",
         "greater_than_or_equal": ">=",
+        ">=": ">=",
         "less_than": "<",
+        "<": "<",
         "less_than_or_equal": "<=",
+        "<=": "<=",
         "not_equals": "!=",
+        "!=": "!=",
         "in": "in",
     }
 
@@ -483,6 +533,9 @@ def create_metrics_matrix(
                 "active": False,
                 "tolerance": None,
             }
+
+    if not metrics_list:
+        return pd.DataFrame(index=household_ids), np.array([]), {}
 
     # Create the metrics matrix DataFrame
     metrics_matrix = pd.DataFrame(

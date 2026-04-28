@@ -2,7 +2,6 @@
 Test the logic for creating a normalization factor per target to balance targets represented at different concepts or geographic levels.
 """
 
-import torch
 from policyengine_data.calibration.utils import (
     create_geographic_normalization_factor,
 )
@@ -74,10 +73,9 @@ def test_all_inactive_targets() -> None:
         geo_hierarchy, target_info
     )
 
-    # All factors should be zero
     assert (
-        len(normalization_factor) == 0
-    ), "Normalization factor length should be 0 as there are no active targets."
+        normalization_factor is None
+    ), "Normalization factor should be omitted when there are no active targets."
 
 
 def test_no_matching_geo_codes() -> None:
@@ -94,7 +92,6 @@ def test_no_matching_geo_codes() -> None:
         geo_hierarchy, target_info
     )
 
-    # All factors should be zero since no geo codes match
-    assert torch.all(
-        normalization_factor == 0
-    ), "Normalization factors should be zero since no geo codes match."
+    assert (
+        normalization_factor is None
+    ), "Normalization factor should be omitted when no geo codes match."

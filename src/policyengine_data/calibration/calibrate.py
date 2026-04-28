@@ -50,7 +50,7 @@ def calibrate_single_geography_level(
     use_dataset_weights: Optional[bool] = True,
     regularize_with_l0: Optional[bool] = False,
     calibration_log_path: Optional[str] = None,
-    raise_error: Optional[bool] = True,
+    raise_error: Optional[bool] = False,
 ) -> "SingleYearDataset":
     """
     This function will calibrate the dataset for a specific geography level, defaulting to stacking the base dataset per area within it.
@@ -77,7 +77,7 @@ def calibrate_single_geography_level(
         use_dataset_weights (Optional[bool]): Whether to use original dataset weights as the starting weights for calibration. Default: True.
         regularize_with_l0 (Optional[bool]): Whether to use L0 regularization during calibration. Default: False.
         calibration_log_path (Optional[str]): The path to the calibration log file. If None, calibration log CSVs will not be saved.
-        raise_error (Optional[bool]): Whether to raise an error if matrix creation fails. Default: True.
+        raise_error (Optional[bool]): Whether to raise an error if matrix creation fails. Default: False.
 
     Returns:
         geography_level_calibrated_dataset (SingleYearDataset): The calibrated dataset for the specified geography level.
@@ -100,9 +100,7 @@ def calibrate_single_geography_level(
         if stack_datasets:
             # Load dataset configured for the specific geography first
             # TODO: move away from hardcoding UCGID for geographic identification once -us is updated
-            from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
-                UCGID,
-            )
+            from policyengine_data.calibration.ucgid import UCGID
 
             sim_data_to_calibrate = load_dataset_for_geography_legacy(
                 microsimulation_class=microsimulation_class,
@@ -129,49 +127,67 @@ def calibrate_single_geography_level(
             stratum_filter_value=geo_identifier,
             stratum_filter_operation="in",
         )
-        metrics_evaluation = validate_metrics_matrix(
-            metrics_matrix,
-            targets,
-            target_info=target_info,
-            raise_error=raise_error,
-        )
 
-        target_names = []
-        excluded_targets = []
-        for target_id, info in target_info.items():
-            target_names.append(info["name"])
-            if not info["active"]:
-                excluded_targets.append(target_id)
-        target_names = np.array(target_names)
-
-        if use_dataset_weights:
-            weights = sim_data_to_calibrate.calculate(
-                "household_weight"
-            ).values
+        if len(targets) == 0:
+            logger.warning(
+                "No calibration targets found for %s in %s; preserving "
+                "the sampled dataset without reweighting.",
+                area,
+                year,
+            )
+            if use_dataset_weights:
+                optimized_weights = sim_data_to_calibrate.calculate(
+                    "household_weight"
+                ).values
+            else:
+                optimized_weights = np.ones(
+                    len(sim_data_to_calibrate.calculate("household_id").values)
+                )
+            optimized_sparse_weights = pd.Series(optimized_weights)
         else:
-            weights = np.ones(len(metrics_matrix))
+            metrics_evaluation = validate_metrics_matrix(
+                metrics_matrix,
+                targets,
+                target_info=target_info,
+                raise_error=raise_error,
+            )
 
-        # Calibrate with L0 regularization
-        from microcalibrate import Calibration
+            target_names = []
+            excluded_targets = []
+            for target_id, info in target_info.items():
+                target_names.append(info["name"])
+                if not info["active"]:
+                    excluded_targets.append(target_id)
+            target_names = np.array(target_names)
 
-        calibrator = Calibration(
-            weights=weights,
-            targets=targets,
-            target_names=target_names,
-            estimate_matrix=metrics_matrix,
-            epochs=epochs,
-            learning_rate=0.2,
-            noise_level=noise_level,
-            excluded_targets=(
-                excluded_targets if len(excluded_targets) > 0 else None
-            ),
-            sparse_learning_rate=0.1,
-            regularize_with_l0=regularize_with_l0,
-            csv_path=calibration_log_path,
-        )
-        performance_log = calibrator.calibrate()
-        optimized_sparse_weights = calibrator.sparse_weights
-        optimized_weights = calibrator.weights
+            if use_dataset_weights:
+                weights = sim_data_to_calibrate.calculate(
+                    "household_weight"
+                ).values
+            else:
+                weights = np.ones(len(metrics_matrix))
+
+            # Calibrate with L0 regularization
+            from microcalibrate import Calibration
+
+            calibrator = Calibration(
+                weights=weights,
+                targets=targets,
+                target_names=target_names,
+                estimate_matrix=metrics_matrix,
+                epochs=epochs,
+                learning_rate=0.2,
+                noise_level=noise_level,
+                excluded_targets=(
+                    excluded_targets if len(excluded_targets) > 0 else None
+                ),
+                sparse_learning_rate=0.1,
+                regularize_with_l0=regularize_with_l0,
+                csv_path=calibration_log_path,
+            )
+            performance_log = calibrator.calibrate()
+            optimized_sparse_weights = calibrator.sparse_weights
+            optimized_weights = calibrator.weights
 
         # Minimize the calibrated dataset storing only records with non-zero weights
         single_year_calibrated_dataset = minimize_calibrated_dataset_legacy(
@@ -309,9 +325,7 @@ def calibrate_all_levels(
         logger.info(f"Stacking dataset for {area}...")
 
         # Load dataset configured for the specific geographic area
-        from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
-            UCGID,
-        )
+        from policyengine_data.calibration.ucgid import UCGID
 
         sim_data_to_stack = load_dataset_for_geography_legacy(
             microsimulation_class=microsimulation_class,

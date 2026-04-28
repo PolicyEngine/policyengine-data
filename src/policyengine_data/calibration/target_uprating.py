@@ -4,6 +4,8 @@ from typing import Dict, List, Optional
 import pandas as pd
 from sqlalchemy import create_engine, text
 
+from .database_schema import ensure_calibration_schema
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,6 +28,8 @@ def fetch_targets(
     Returns:
         DataFrame with target data joined with stratum information
     """
+    ensure_calibration_schema(engine)
+
     query = """
     SELECT 
         t.target_id,
@@ -223,39 +227,33 @@ def insert_uprated_targets_in_db(engine, inserts: List[Dict]) -> int:
     with engine.begin() as conn:
         for insert in inserts:
             # Check if target already exists for this combination
-            check_query = text(
-                """
+            check_query = text("""
                 SELECT target_id FROM targets 
                 WHERE stratum_id = :stratum_id 
                 AND variable = :variable 
                 AND period = :period 
                 AND reform_id = :reform_id
-            """
-            )
+            """)
 
             result = conn.execute(check_query, insert)
             existing = result.fetchone()
 
             if existing:
                 # Update existing target
-                update_query = text(
-                    """
+                update_query = text("""
                     UPDATE targets
                     SET value = :value, tolerance = :tolerance, active = :active
                     WHERE target_id = :target_id
-                """
-                )
+                """)
                 conn.execute(
                     update_query, {**insert, "target_id": existing[0]}
                 )
             else:
                 # Insert new target
-                insert_query = text(
-                    """
+                insert_query = text("""
                     INSERT INTO targets (stratum_id, variable, period, reform_id, value, active, tolerance)
                     VALUES (:stratum_id, :variable, :period, :reform_id, :value, :active, :tolerance)
-                """
-                )
+                """)
                 conn.execute(insert_query, insert)
 
     return len(inserts)

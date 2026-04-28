@@ -2,12 +2,10 @@ from typing import Any, Optional
 
 import numpy as np
 import pandas as pd
-from policyengine_us.variables.household.demographic.geographic.ucgid.ucgid_enum import (
-    UCGID,
-)
 
 from ..dataset_legacy import Dataset
 from ..single_year_dataset import SingleYearDataset
+from .ucgid import UCGID
 
 """
 Functions using the legacy Dataset class to operate datasets given their dependency on Microsimulation objects.
@@ -132,12 +130,13 @@ def load_dataset_for_geography_legacy(
             sim.default_input_period = year
             sim.build_from_dataset()
 
-    hhs = len(sim.calculate("household_id").values)
-    geo_values = [geography_identifier] * hhs
-    sim.set_input(geography_variable, year, geo_values)
+    if geography_variable in sim.tax_benefit_system.variables:
+        hhs = len(sim.calculate("household_id").values)
+        geo_values = [geography_identifier] * hhs
+        sim.set_input(geography_variable, year, geo_values)
 
-    ucgid_values = sim.calculate(geography_variable).values
-    assert all(val == geography_identifier.name for val in ucgid_values)
+        ucgid_values = sim.calculate(geography_variable).values
+        assert all(val == geography_identifier.name for val in ucgid_values)
 
     return sim
 

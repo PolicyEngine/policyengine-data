@@ -39,10 +39,14 @@ def SingleYearDataset_to_Dataset(
         for entity_name, entity_df in dataset.entities.items():
             # Process each column as a variable
             for column_name in entity_df.columns:
-                values = entity_df[column_name].values
+                column = entity_df[column_name]
+                values = column.to_numpy()
 
                 # Handle special data type conversions
-                if values.dtype == object:
+                if (
+                    pd.api.types.is_string_dtype(column.dtype)
+                    or values.dtype == object
+                ):
                     try:
                         # Try to convert to appropriate type
                         if column_name in [
@@ -51,14 +55,14 @@ def SingleYearDataset_to_Dataset(
                             "state_code_str",
                         ]:
                             # String columns - encode as fixed-length strings
+                            strings = [
+                                "" if pd.isna(v) else str(v) for v in values
+                            ]
                             max_len = max(
-                                len(str(v)) for v in values if v is not None
+                                (len(value) for value in strings), default=1
                             )
                             values = np.array(
-                                [
-                                    str(v) if v is not None else ""
-                                    for v in values
-                                ],
+                                strings,
                                 dtype=f"S{max_len}",
                             )
                         elif column_name == "county_fips":
@@ -87,18 +91,18 @@ def SingleYearDataset_to_Dataset(
                         )
 
                 # Convert bool to int
-                elif values.dtype == bool:
+                elif pd.api.types.is_bool_dtype(column.dtype):
                     values = values.astype("int64")
 
                 # Preserve integer types for ID variables
-                elif np.issubdtype(values.dtype, np.integer):
+                elif pd.api.types.is_integer_dtype(column.dtype):
                     if column_name.endswith("_id"):
                         values = values.astype("int64")
                     else:
                         values = values.astype("float64")
 
                 # Use float64 for other numeric types (matching CPS format)
-                elif np.issubdtype(values.dtype, np.floating):
+                elif pd.api.types.is_float_dtype(column.dtype):
                     values = values.astype("float64")
 
                 try:
